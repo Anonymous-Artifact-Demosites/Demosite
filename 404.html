@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>404 - Page Not Found</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,600,700|Noto+Sans:400,600|Castoro:400" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --panel: #ffffff;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #3273dc;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            font-family: 'Google Sans', 'Noto Sans', 'Castoro', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(120% 140% at 10% 20%, rgba(50, 115, 220, 0.12), transparent),
+                        radial-gradient(90% 120% at 85% 15%, rgba(99, 102, 241, 0.1), transparent),
+                        var(--bg);
+            color: var(--text);
+        }
+        .card {
+            width: min(680px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-left: 6px solid var(--accent);
+            border-radius: 14px;
+            padding: 32px 30px;
+            box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
+        }
+        .eyebrow {
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        h1 {
+            margin: 0 0 12px 0;
+            font-size: clamp(32px, 4vw, 44px);
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+        }
+        .subhead {
+            margin: 0 0 18px 0;
+            font-size: 17px;
+            line-height: 1.7;
+            color: var(--muted);
+        }
+        .details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .pill {
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #f2f4f8;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            font-size: 14px;
+        }
+        .pill strong {
+            color: #111827;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="eyebrow">404 / Not Found</div>
+        <h1>Page not found</h1>
+        <p class="subhead">The link you followed doesn’t exist or may have been moved. Please check the address or navigate from the main site.</p>
+        <div class="details">
+            <div class="pill"><strong>Status:</strong> 404 </div>
+        </div>
+    </div>
+</body>
+</html> 

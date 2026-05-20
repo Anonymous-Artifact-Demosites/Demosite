@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="./static/js/access-control.js"></script>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="The Tower of Babel: Systematically Analyzing Account Management Vulnerabilities in Web OAuth Integration - Empirical Case Studies">
+  <meta name="keywords" content="OAuth, OIDC, Web Security, Account Management, Identity State Desynchronization">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Tower of Babel: Empirical Case Studies</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+<!-- Add CSS for image modal -->
+  <style>
+    .modal-image {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      padding-top: 10px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.95);
+    }
+
+    /* Completely hide all default close buttons */
+    .delete,
+    button.modal-close,
+    .modal-close,
+    .modal-card-head .delete, 
+    .modal-card-head .modal-close {
+      display: none !important;
+    }
+
+    /* Custom close button */
+    #modalCloseBtn {
+      position: fixed;
+      right: 35px;
+      top: 15px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    #modalCloseBtn:hover {
+      opacity: 1;
+      color: #fff;
+    }
+
+    /* Common styles for both carousels */
+    .custom-carousel {
+      padding-bottom: 40px;
+      max-width: 100%;
+      margin: 0 auto;
+      border: none !important;
+      background: none !important;
+    }
+
+    /* Override Bulma carousel styles */
+    .carousel .carousel-container {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
+    .carousel .carousel-container .carousel-items {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
+    .carousel .carousel-container .carousel-items .carousel-item {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Remove all borders from carousel items */
+    .custom-carousel .item,
+    .custom-carousel .item > *,
+    .carousel-item,
+    .carousel-item > * {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
+    .custom-carousel .item figure {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Style only the image itself */
+    .custom-carousel .item img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      min-height: 400px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: none !important;
+      background: none !important;
+    }
+
+    /* Override any Bulma image styles */
+    .image,
+    .image img,
+    figure,
+    figure img {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Override Bulma's figure styles */
+    figure.image {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Ensure no borders on focus */
+    .carousel *:focus,
+    .carousel-item:focus,
+    .carousel-container:focus {
+      outline: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Remove borders from slider navigation */
+    .slider-navigation-previous,
+    .slider-navigation-next {
+      border: none !important;
+      background: rgba(255, 255, 255, 0.7) !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+      color: #363636 !important;
+      border-radius: 50% !important;
+      width: 40px !important;
+      height: 40px !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .slider-navigation-previous:hover,
+    .slider-navigation-next:hover {
+      background: rgba(255, 255, 255, 0.9) !important;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+      transform: scale(1.1);
+    }
+
+    .slider-navigation-previous {
+      left: -50px !important;
+    }
+
+    .slider-navigation-next {
+      right: -50px !important;
+    }
+
+    /* Adjust container padding to accommodate navigation buttons */
+    .carousel-container {
+      padding: 0 60px !important;
+    }
+
+    /* Make navigation buttons more visible on dark backgrounds */
+    .slider-navigation-previous i,
+    .slider-navigation-next i {
+      color: #363636 !important;
+      font-size: 1.5rem !important;
+      font-weight: bold !important;
+    }
+
+    /* Ensure buttons are visible on hover */
+    .carousel:hover .slider-navigation-previous,
+    .carousel:hover .slider-navigation-next {
+      opacity: 1 !important;
+    }
+
+    @media screen and (max-width: 768px) {
+      .slider-navigation-previous {
+        left: -20px !important;
+      }
+      
+      .slider-navigation-next {
+        right: -20px !important;
+      }
+      
+      .carousel-container {
+        padding: 0 30px !important;
+      }
+    }
+
+    /* Adjust pagination dots position */
+    .custom-carousel .slider-pagination {
+      bottom: 0;
+      padding: 10px 0;
+    }
+
+    /* Make carousel container responsive */
+    .carousel-container {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    /* Center carousel items */
+    .carousel-container .carousel-items {
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      margin: auto;
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 95%;
+      max-height: 95vh;
+      object-fit: contain;
+      transform-origin: center;
+      transition: transform 0.3s ease;
+    }
+
+    .zoomed {
+      transform: scale(1.5);
+    }
+
+    /* Hide default modal close button */
+    .modal-close:not(.modal-image .modal-close) {
+      display: none !important;
+    }
+
+    /* Style the modal close button */
+    .modal-image .modal-close {
+      position: fixed;
+      right: 35px;
+      top: 15px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: auto;
+      height: auto;
+    }
+
+    .modal-image .modal-close:hover {
+      color: #fff;
+      text-decoration: none;
+      background: none;
+    }
+
+    .modal-image .modal-close:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* Ensure Bulma's modal-close button is hidden */
+    button.modal-close {
+      display: none !important;
+    }
+
+    /* Add zoom instructions */
+    .zoom-instructions {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 1001;
+      display: none;
+    }
+
+    .zoomable {
+      cursor: zoom-in;
+      transition: opacity 0.3s;
+    }
+
+    .zoomable:hover {
+      opacity: 0.8;
+    }
+
+    /* Adjust carousel display */
+    #malicious-apps-carousel {
+      margin: 0 auto;
+      max-width: 1200px;
+    }
+
+    #malicious-apps-carousel .item {
+      padding: 10px;
+    }
+
+    /* Add custom styles for vulnerable sites carousel */
+    #vulnerable-sites-carousel {
+      padding-bottom: 40px; /* Add padding for pagination dots */
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    #vulnerable-sites-carousel .item {
+      padding: 0 10px;
+    }
+
+    #vulnerable-sites-carousel .item img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* Adjust pagination dots position */
+    #vulnerable-sites-carousel .slider-pagination {
+      bottom: 0;
+      padding: 10px 0;
+    }
+
+    /* Make carousel container responsive */
+    .carousel-container {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    /* Case title with icon */
+    .case-title-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .case-icon {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    @media screen and (max-width: 768px) {
+      .case-icon {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    /* Ensure video controls are always visible */
+    .publication-video video {
+      display: block;
+    }
+
+    .publication-video video::-webkit-media-controls-panel {
+      display: flex !important;
+      opacity: 1 !important;
+    }
+
+    .publication-video video::-webkit-media-controls-enclosure {
+      display: flex !important;
+      opacity: 1 !important;
+    }
+
+    .publication-video video::-webkit-media-controls-play-button {
+      display: inline-block !important;
+    }
+
+    .publication-video video::-webkit-media-controls-timeline {
+      display: inline-block !important;
+    }
+
+    .publication-video video::-webkit-media-controls-current-time-display,
+    .publication-video video::-webkit-media-controls-time-remaining-display {
+      display: inline-block !important;
+    }
+
+    .publication-video video::-webkit-media-controls-mute-button,
+    .publication-video video::-webkit-media-controls-volume-slider {
+      display: inline-block !important;
+    }
+
+    .publication-video video::-webkit-media-controls-fullscreen-button {
+      display: inline-block !important;
+    }
+
+  </style>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+
+
+    <section class="hero">
+      <div class="hero-body">
+        <div class="container is-max-desktop">
+          <div class="columns is-centered">
+            <div class="column has-text-centered">
+              <h1 class="title is-1 publication-title">The Tower of Babel: Systematically Analyzing Account Management Vulnerabilities in Web OAuth Integration</h1>
+              <div class="is-size-4" style="margin-top: 2rem;">
+                <p class="has-text-grey-dark">Anonymous Researchers</p>
+                <p class="has-text-grey">Anonymous Institution</p>
+              </div>
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section class="section" style="padding-top: 1rem;">
+      <div class="container is-max-desktop">
+        <!-- Abstract. -->
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Intro</h2>
+            <div class="content has-text-justified">
+              <p>
+                This is an anonymous demo site for our paper "The Tower of Babel: Systematically Analyzing Account Management Vulnerabilities in Web OAuth Integration" on hybrid account management, showing how inconsistent identity state management leads to composable vulnerability primitives (Q1–Q10) and end-to-end attack vectors (T1–T7).
+              </p>
+              <p>
+                In this site, we will demonstrate various more detailed cases, providing an intuitive and accessible way to understand our work.
+              </p>
+            </div>
+          </div>
+        </div>
+        <!--/ Abstract. -->
+    
+        <!-- Cases -->
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <!-- Case 1 -->
+            <div style="margin-top: 40px; padding: 30px; background-color: #f8f9fa; border-radius: 12px; border-left: 5px solid #3273dc;">
+              <div class="case-title-container" style="margin-bottom: 20px;">
+                <h2 class="title is-3" style="margin-bottom: 0;">Case I: Pinterest</h2>
+                <img src="./static/images/web_icon/pinterest.png" alt="Pinterest icon" class="case-icon" onerror="this.style.display='none';">
+              </div>
+              <div class="content has-text-justified">
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
+                  <p style="margin-bottom: 0;">
+                    <strong>Tranco Ranking:</strong> <span id="tranco-rank-1">Top 40+</span>
+                  </p>
+                </div>
+                <p style="margin-bottom: 30px;">
+                  Pinterest is a visual discovery engine with over 530 million users. Our analysis revealed a critical chain of vulnerabilities in its account management logic. <strong>T1</strong> provides attackers with the means to gain account access, while <strong>T5</strong> and <strong>T6</strong> ensure attackers obtain covert and persistent control. <strong>T3</strong> enables attackers to permanently take over accounts, completing a comprehensive attack chain that compromises user security at multiple levels.
+                </p>
+                
+                <!-- Problem 1.1 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4">T1: Implicit Pre-hijacking of First-party Accounts</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following video demonstrates how attackers combine Q1 and Q4 to execute T1.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attacker's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit pinterest.com and click <strong>Sign up</strong>.</li>
+                      <li style="margin-bottom: 8px;">Select <strong>"Continue with email"</strong>.</li>
+                      <li style="margin-bottom: 8px;">Enter the victim's email address: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">Set an attacker-controlled password: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">AttackerPass123!</code>.</li>
+                      <li style="margin-bottom: 8px;">Submit the registration.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> Pinterest creates the account immediately <strong>without</strong> requiring email verification.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit Pinterest for the first time and click <strong>"Continue with Google"</strong>.</li>
+                      <li style="margin-bottom: 8px;">Select the corresponding Google account (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>) to authorize.</li>
+                      <li style="margin-bottom: 8px;">Pinterest detects the existing email in the database and <strong>automatically logs the user in</strong>, linking the Google OAuth token to the attacker's account without any warning or password challenge.</li>
+                    </ol>
+                  </div>
+
+                  <div class="publication-video" style="margin-top: 20px;">
+                    <video controls width="100%" style="max-width: 800px;">
+                      <source src="./static/videos/Pinterest - 1.mp4" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Immediate Account Compromise:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim is unknowingly logged into a trap account controlled by the attacker. Because the attacker set the password during the pre-registration phase (Step 4), they retain full, parallel access to the account regardless of the victim's login method.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Silent Surveillance:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Since the account is effectively "shared" between the attacker and the victim, the attacker can silently monitor the victim's real-time activities. This includes access to sensitive user data such as private collections (Secret Boards), saved pins, and direct messages.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">False Sense of Security:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim believes they have just created a brand new account via Google and has no reason to suspect that a secondary access method (the attacker's password) already exists. This lack of awareness prevents them from taking immediate remedial actions, such as changing the password.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Problem 1.2 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T6">T6: The Shadow Binding Attack</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following video demonstrates how attackers exploit <strong>Q6</strong> (Stale Third-party Binding) and <strong>Q10</strong> (Hidden Binding Relationships) to execute <strong>T6</strong>.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Step 1: The Setup (Attacker's Actions)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit pinterest.com and click <strong>"Continue with Google"</strong>.</li>
+                      <li style="margin-bottom: 8px;">Select the attacker-controlled Google Account A (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>) to authorize.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> Pinterest automatically creates an account or logs in, establishing a binding with <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Step 2: The Attempted Cleanup (Victim's Actions)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim takes over the account (or buys it) and navigates to <strong>Settings > Account management</strong>.</li>
+                      <li style="margin-bottom: 8px;">Changes the Email address from the old one (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>) to their own secure email (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>).</li>
+                      <li style="margin-bottom: 8px;">(Optional) Resets the password to ensure security.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; color: #0c5460;">
+                      <strong>Observation:</strong> The system updates the primary identifier to the victim's email.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d4edda; border-left: 4px solid #28a745; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #155724;">Step 3: The Exploit (Verification)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The attacker returns to the login page and clicks <strong>"Continue with Google"</strong>.</li>
+                      <li style="margin-bottom: 8px;">Selects the original Google Account A (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>). <strong>Login is still successful.</strong></li>
+                      <li style="margin-bottom: 8px;">The victim logs in via <strong>"Continue with Google"</strong> using Google Account B (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>). <strong>Login is also successful.</strong></li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e8f5e9; border-radius: 4px; font-weight: bold; color: #155724;">
+                      <strong>Result:</strong> Two different Google accounts can simultaneously access the same Pinterest account.
+                    </div>
+                  </div>
+
+                  <div class="publication-video" style="margin-top: 20px;">
+                    <video controls width="100%" style="max-width: 800px;">
+                      <source src="./static/videos/Pinterest - 2.mp4" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+
+                  <div style="margin: 30px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">State Desynchronization:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The OAuth binding for the old Email A was not automatically revoked when the user updated their primary email. This leaves a "stale" backdoor that bypasses password resets.
+                      </p>
+                    </div>
+                    <div style="text-align: center; margin: 30px 0;">
+                      <img src="./static/images/question/Pinterest - Q10.png" alt="Overview of Identifier Reuse Attack" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                      <p style="font-style: italic; margin-top: 10px; color: #666;">
+                        Figure: Pinterest's Opaque OAuth Management UI
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Deceptive UI Design:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        As shown in the screenshot, Pinterest's security settings page is critically flawed. The "Login options" section functions as a feature toggle (On/Off) rather than an access list. It only shows if Google login is enabled, but fails to display how many or which specific Google accounts are currently bound. The victim has zero visibility into the fact that the attacker's account is still linked, making the backdoor effectively invisible.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Problem 1.3: T5 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T5-Pinterest">T5: Unauthorized Third-party Credential Manipulation</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    Once the attacker has any form of login to the victim's Pinterest account (for example, via T1),
+                    the account management UI can be misused to plant a long‑lived secondary login channel.
+                    This attack is modeled as <strong>T5</strong> and relies jointly on two primitives:
+                    <strong>Q8</strong> (no re-authentication when changing linked IdPs)
+                    and <strong>Q10</strong> (a management page that hides the concrete list of linked third‑party accounts).
+                  </p>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attack Process:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">
+                        While already authenticated as the victim, the attacker opens
+                        <strong>Settings &gt; Security &gt; Login options</strong> and adds another Google account that they fully control.
+                        Because of <strong>Q8</strong>, Pinterest treats this as a low‑risk operation and never asks the user to re‑enter their password or re‑confirm their email.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The management interface represents the OAuth binding only as a generic "Use your Google account to log in" toggle (<strong>Q10</strong>),
+                        without exposing which Google account is actually attached.
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <p style="margin-bottom: 0; line-height: 1.8;">
+                      The additional OAuth login effectively becomes a hidden <strong>shadow credential</strong>.
+                      Even if the victim executes every remediation step they can see in the UI (password reset, identifier change),
+                      the attacker can continue to sign in via the planted Google account and quietly track or manipulate the profile.
+                      The gap between what the UI shows and the real authentication state makes the compromise extremely difficult for users to notice or undo.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Problem 1.4: T3 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T3-Pinterest">T3: Account Takeover via Identifier Update</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    Beyond maintaining a backdoor, Pinterest's design for changing the primary email also allows the attacker to seize ownership of the account outright.
+                    This corresponds to <strong>T3</strong> and stems from <strong>Q5</strong> (One-way Identifier Update): the platform only proves control over the <em>new</em> email address and never authenticates or alerts the original one.
+                  </p>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attack Process:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">
+                        While still logged in through a compromised session, the attacker opens the email‑change dialog and proposes to replace
+                        <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>
+                        with an attacker‑owned address such as
+                        <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        All verification traffic (codes and confirmation links) is then sent exclusively to the new address.
+                        Once the attacker clicks “Confirm” from their mailbox, the account's primary identifier switches to the attacker,
+                        and the original email is silently detached without any re‑authentication.
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/Pinterest - T3.png" alt="Pinterest one-way email change confirmation UI" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: Pinterest's one-way email change flow that never authenticates or notifies the original email owner.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <p style="margin-bottom: 0; line-height: 1.8;">
+                      After the primary identifier is rewritten to the attacker's email, the victim no longer has any credential or identifier that the service associates with the account.
+                      Using the standard <strong>"Forgot password"</strong> flow with the old address now yields a “no such user” style response,
+                      while every legitimate recovery channel points to the attacker-controlled inbox.
+                      In effect, the account has been transferred, and the original owner has <strong>no practical way</strong> to regain control through on-site mechanisms alone.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--/ Cases -->
+      </div>
+    </section>
+    
+    <section class="section">
+      <div class="container is-max-desktop">
+        <!-- Case 2 -->
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <div style="margin-top: 40px; padding: 30px; background-color: #f8f9fa; border-radius: 12px; border-left: 5px solid #3273dc;">
+              <div class="case-title-container" style="margin-bottom: 20px;">
+                <h2 class="title is-3" style="margin-bottom: 0;">Case II: The New York Times </h2>
+                <img src="./static/images/web_icon/nytimes.png" alt="Case 2 icon" class="case-icon" onerror="this.style.display='none';">
+              </div>
+              <div class="content has-text-justified">
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
+                  <p style="margin-bottom: 0;">
+                    <strong>Tranco Ranking:</strong> <span id="tranco-rank-2">Top 100+</span>
+                  </p>
+                </div>
+                <p style="margin-bottom: 30px;">
+                  The New York Times is one of the world's most influential media platforms. Our analysis revealed a systemic failure in identity state management. Vulnerabilities across the entire account lifecycle allow attackers to pre-hijack accounts (T1), completely take them over by swapping identifiers (T3), maintain access after password resets (T4), and establish persistent backdoors without authentication (T5).
+                </p>
+                
+                <!-- Problem 2.1: T1 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T1">T1: Classic Account Pre-hijacking</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following video demonstrates how attackers combine Q1 and Q4 to execute T1.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attacker's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit nytimes.com and click <strong>Log in</strong>.</li>
+                      <li style="margin-bottom: 8px;">Select <strong>"Create one"</strong> to sign up.</li>
+                      <li style="margin-bottom: 8px;">Enter the victim's email address: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">Set an attacker-controlled password: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">AttackerPass123!</code>.</li>
+                      <li style="margin-bottom: 8px;">Submit the registration.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> NYTimes creates the account immediately <strong>without</strong> requiring email verification.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit NYTimes for the first time and click <strong>"Continue with Google"</strong>.</li>
+                      <li style="margin-bottom: 8px;">Select the corresponding Google account (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>) to authorize.</li>
+                      <li style="margin-bottom: 8px;">The system detects the existing email and silently merges the Google identity into the attacker's pre-created account without any warning.</li>
+                    </ol>
+                  </div>
+                  <div class="publication-video" style="margin-top: 20px;">
+                    <video controls width="100%" style="max-width: 800px;">
+                      <source src="./static/videos/New York Times.mp4" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Immediate Account Compromise:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim is unknowingly logged into a trap account. Because the attacker holds the password set during the pre-registration phase, they retain full, parallel access to the account regardless of how the victim logs in.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Silent Surveillance & Profiling:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Since the account is effectively "shared," the attacker can silently monitor the victim's real-time activities, including reading history, saved articles, and topic preferences. For high-profile targets (e.g., politicians, journalists), this data can be used to build a psychological profile or anticipate investigative reporting.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Gateway to Escalation:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        This initial foothold is the necessary prerequisite for executing more severe attacks like T3 (Total Takeover) or T5 (Backdoor Planting).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Problem 2.2: T3 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T3">T3: Account Takeover via Identifier Update</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following demonstrates how attackers combine T1 with Q5 to execute T3. This attack builds upon the account pre-hijacking established in T1.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attacker's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Log in to the pre-hijacked account using the password set in T1.</li>
+                      <li style="margin-bottom: 8px;">Navigate to <strong>Account Settings</strong>.</li>
+                      <li style="margin-bottom: 8px;">Select <strong>"Change Email"</strong> and enter a new attacker-controlled email: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">Click the verification link sent only to the new email.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> The system updates the primary identifier <strong>without</strong> notifying the old email (the victim's email).
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim attempts to log in using their original email <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">The login fails with <strong>"Account not found"</strong> or <strong>"Invalid credentials"</strong>.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; font-weight: bold; color: #0c5460;">
+                      <strong>Result:</strong> The victim is completely locked out and has lost ownership of the account.
+                    </div>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/NYTimes - T3.png" alt="T3 Demonstration Screenshot" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: The Identifier Swapping Interface Leading to Permanent Account Theft.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Irreversible Asset Theft:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim permanently loses ownership of the account and, crucially, any paid subscriptions associated with it. The attacker essentially "steals" the financial value of the subscription.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Denial of Service (DoS):</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim is abruptly cut off from the service. Since no notification was sent to the original email, the victim has no audit trail to prove ownership to customer support, making recovery nearly impossible.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Reputational Damage:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The attacker now owns the identity associated with the victim's name on the platform. They can post comments or interact with content impersonating the victim, potentially causing reputational harm.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Problem 2.3: T4 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T4">T4: Session Persistence after Credential Change</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following demonstrates how attackers combine T1 with Q7 to execute T4. This attack builds upon the account pre-hijacking established in T1.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Step 1: The Setup (Attacker's Actions)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The attacker holds an active login session (cookie) in their browser from previous steps.</li>
+                      <li style="margin-bottom: 8px;">The attacker waits for the victim to perform security operations.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> The attacker's session remains valid and active.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Step 2: The Remediation (Victim's Actions)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim regains access (or suspects a breach) and navigates to <strong>Settings</strong>.</li>
+                      <li style="margin-bottom: 8px;">The victim changes the password to a new strong password.</li>
+                      <li style="margin-bottom: 8px;">The victim expects all other devices to be logged out.</li>
+                    </ol>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/NYTimes - T4.png" alt="T4 Demonstration Screenshot" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: The Password Reset Form That Fails to Invalidate Zombie Sessions.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Total Remediation Failure:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Standard security advice—"Change your password immediately if you suspect a breach"—is rendered completely ineffective. The victim believes they are safe, while the attacker remains inside.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Long-Term Espionage:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The attacker can continue to access the account for weeks or months (until the session cookie naturally expires). This allows for prolonged, undetected data exfiltration.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Ability to Undo Security Changes:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Since the attacker is still logged in, they can often revert the victim's changes (e.g., changing the password back or disabling security features) immediately after the victim implements them.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Problem 2.4: T5 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T5">T5: Unauthorized Third-party Credential Manipulation</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following demonstrates how attackers combine T1 with Q8 to execute T5. This attack builds upon the account pre-hijacking established in T1.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Step 1: Planting the Backdoor (Attacker's Actions)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Using the "Zombie Session" from T4, navigate to <strong>Account Settings</strong>.</li>
+                      <li style="margin-bottom: 8px;">Click <strong>"Connect Apple"</strong> and select the attacker's own Apple account.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> The system binds the new OAuth method immediately <strong>without</strong> asking for the account password.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Step 2: The Futile Cleanup (Victim's Actions)</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim navigates to <strong>Account Settings</strong> and notices that Apple appears in the <strong>"Connected"</strong> section, even though they never linked an Apple account.</li>
+                      <li style="margin-bottom: 8px;">The victim finds this suspicious and clicks the <strong>"Disconnect"</strong> button next to Apple to remove the unauthorized connection.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; font-weight: bold; color: #0c5460;">
+                      <strong>Counter-Attack:</strong> The attacker (still logged in via the "Zombie Session" from T4) navigates to the same settings page and simply clicks <strong>"Connect"</strong> again in the <strong>"Not Connected"</strong> section to restore the Apple binding.
+                    </div>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; color: #0c5460;">
+                      <strong>Observation:</strong> The backdoor is instantly restored, and Apple reappears in the <strong>"Connected"</strong> section.
+                    </div>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/NYTimes - T5.png" alt="T5 Demonstration Screenshot" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: The Unverified OAuth Interface Enabling Persistent Backdoors.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">The "Revolving Door" Vulnerability:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Combined with T4, this creates an infinite loop where the attacker can re-establish access seconds after being removed. The victim is fighting a losing battle against an adversary they cannot evict.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Bypassing Strong Authentication:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Even if the victim sets a complex 20-character password, the attacker can log in via the bound Apple/Facebook account. This effectively downgrades the account's security to the lowest common denominator.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Stealthy Persistence:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Attackers can bind a secondary, inconspicuous social account (e.g., a generic "Apple ID" with a hidden email) that the victim might overlook or confuse with their own, ensuring permanent access.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--/ Case 2 -->
+      </div>
+    </section>
+    
+    <section class="section">
+      <div class="container is-max-desktop">
+        <!-- Case 3 -->
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <div style="margin-top: 40px; padding: 30px; background-color: #f8f9fa; border-radius: 12px; border-left: 5px solid #3273dc;">
+              <div class="case-title-container" style="margin-bottom: 20px;">
+                <h2 class="title is-3" style="margin-bottom: 0;">Case III: 2captcha</h2>
+                <img src="./static/images/web_icon/2captcha.png" alt="Case 3 icon" class="case-icon" onerror="this.style.display='none';">
+              </div>
+              <div class="content has-text-justified">
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
+                  <p style="margin-bottom: 0;">
+                    <strong>Tranco Ranking:</strong> <span id="tranco-rank-3">Top 20K+</span>
+                  </p>
+                </div>
+                <p style="margin-bottom: 30px;">
+                  2Captcha is a popular automated captcha solving service. Our analysis revealed critical flaws in its verification logic. By exploiting T2 (Verification Hijacking) via race conditions and T7 (Registration DoS), attackers can steal API keys, drain balances, or block legitimate users from accessing the service.
+                </p>
+
+                <!-- Problem 3.1: T2 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T2">T2: Verification Hijacking via Race Condition</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following video demonstrates how attackers combine Q2 (Unbound Verification) and Q3 (Premature Identifier Lock) to execute T2.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attacker's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit 2captcha.com and select <strong>Sign Up</strong> (Email + Password).</li>
+                      <li style="margin-bottom: 8px;">Enter the victim's email: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">Set an attacker-controlled password: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">AttackerPass123!</code>.</li>
+                      <li style="margin-bottom: 8px;">Submit the form. The system pauses, waiting for email verification.</li>
+                      <li style="margin-bottom: 8px;">Keep this browser tab open and wait for the race condition trigger.</li>
+                    </ol>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit 2Captcha and click <strong>"Continue with Google"</strong>.</li>
+                      <li style="margin-bottom: 8px;">The system detects the pending registration (Q3) and requests the email verification code.</li>
+                      <li style="margin-bottom: 8px;">The victim retrieves the code from their inbox and enters it.</li>
+                      <li style="margin-bottom: 8px;"><strong>Logic Flaw (Q2):</strong> Because the verification code is not bound to a specific session, this action simultaneously verifies the attacker's pending request.</li>
+                    </ol>
+                  </div>
+
+                  <div class="publication-video" style="margin: 20px 0;">
+                    <video controls width="100%" style="max-width: 800px;">
+                      <source src="./static/videos/2Captcha.mp4" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <ul style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;"><strong>Critical API Key Leakage:</strong> Attackers obtain API keys to embed the victim's paid service into illegal botnets/scrapers.</li>
+                      <li style="margin-bottom: 8px;"><strong>Financial Theft & Resource Draining:</strong> Massive captcha requests drain prepaid balance; auto-recharge can amplify loss.</li>
+                      <li style="margin-bottom: 8px;"><strong>High-Stealth Compromise:</strong> Victim logs in via Google OAuth and sees a normal dashboard, unaware of parallel session.</li>
+                      <li style="margin-bottom: 8px;"><strong>Business Intelligence Espionage:</strong> Attackers can profile scraping targets and operational scale via API usage logs.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Problem 3.2: T7 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T7">T7: Registration Denial of Service</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    The following image demonstrates how attackers exploit Q3 (Premature Identifier Lock) to execute T7.
+                  </p>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attacker's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Batch-regiister accounts using target corporate emails (e.g., <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">employee@competitor.com</code>).</li>
+                      <li style="margin-bottom: 8px;">Leave the accounts in a <strong>"Pending Verification"</strong> state.</li>
+                      <li style="margin-bottom: 8px;">The system locks these identifiers in the database immediately upon submission.</li>
+                    </ol>
+                  </div>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/2captcha - T7.png" alt="T7 Demonstration Screenshot" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: Registration Denial of Service via Premature Identifier Lock.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim attempts to register an account using their work email.</li>
+                      <li style="margin-bottom: 8px;">The system displays an error: <strong>"User already exists"</strong>.</li>
+                      <li style="margin-bottom: 8px;">Because the attacker controls the unverified registration state, password recovery often fails or loops back to the pending state.</li>
+                    </ol>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <ul style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;"><strong>Targeted Service Blockade:</strong> High-value targets are preemptively blocked from onboarding.</li>
+                      <li style="margin-bottom: 8px;"><strong>Support System Flooding:</strong> Confused users flood support with tickets, raising operational cost.</li>
+                      <li style="margin-bottom: 8px;"><strong>Pre-Launch Sabotage:</strong> Attacker can pre-register domain emails to halt team onboarding for new deployments.</li>
+                    </ul>
+                  </div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--/ Case 3 -->
+      </div>
+    </section>
+    
+    <section class="section">
+      <div class="container is-max-desktop">
+        <!-- Case 4 -->
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <div style="margin-top: 40px; padding: 30px; background-color: #f8f9fa; border-radius: 12px; border-left: 5px solid #3273dc;">
+              <div class="case-title-container" style="margin-bottom: 20px;">
+                <h2 class="title is-3" style="margin-bottom: 0;">Case IV: Spotify</h2>
+                <img src="./static/images/web_icon/Spotify.webp" alt="Case 4 icon" class="case-icon" onerror="this.style.display='none';">
+              </div>
+              <div class="content has-text-justified">
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px;">
+                  <p style="margin-bottom: 0;">
+                    <strong>Tranco Ranking:</strong> <span id="tranco-rank-4">Top 50+</span>
+                  </p>
+                </div>
+                <p style="margin-bottom: 30px;">
+                  Spotify is the world's largest music streaming platform with over 600 million users. Our analysis revealed a comprehensive breakdown in identity verification and account management. Attackers can preemptively register accounts without email verification and implicitly link them with victim identities (T1). Attackers can then completely take over accounts through weak email change procedures (T3), establish persistent backdoors through opaque OAuth management (T5), and permanently lock victims out of their accounts through identifier lockout (T7).
+                </p>
+                
+                <!-- Problem 4.1: T1 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T1-Spotify">T1: Implicit Pre-hijacking of First-party Accounts</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    Spotify's registration system allows attackers to create accounts without email verification, effectively preempting legitimate user registration. This attack corresponds to <strong>T1</strong> and stems from <strong>Q1</strong> (Missing Verification) and <strong>Q4</strong> (Implicit Account Linking). When the legitimate user attempts to register or use Google OAuth, they are forced into a compromised authentication flow that implicitly links their identity to the attacker-pre-created account.
+                  </p>
+                  
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attacker's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">Visit spotify.com and click <strong>Sign up</strong>.</li>
+                      <li style="margin-bottom: 8px;">Enter the victim's email address: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">Choose a username and set an attacker-controlled password: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">AttackerPass123!</code>.</li>
+                      <li style="margin-bottom: 8px;">Submit the registration form.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> Spotify creates the account immediately <strong>without</strong> requiring email verification. The account is in an active, usable state.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Actions:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim visits spotify.com and attempts to sign up using their email <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">The system detects the existing account and blocks standard registration, displaying: <strong>"Email already registered"</strong> or similar.</li>
+                      <li style="margin-bottom: 8px;">The victim attempts to use <strong>"Continue with Google"</strong> OAuth, but Spotify detects the email conflict and redirects to a standard login flow instead of creating a new account.</li>
+                      <li style="margin-bottom: 8px;">The victim is forced to use the standard login, which prompts for an email verification code sent to <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">After entering the verification code (proving email control), the victim successfully logs in and gains access to the account.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; font-weight: bold; color: #0c5460;">
+                      <strong>Critical Flaw:</strong> The victim is logged into the <strong>same account</strong> that the attacker pre-created, effectively sharing access with the attacker who controls the original password.
+                    </div>
+                  </div>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/Spotify - T2.png" alt="Spotify T1 Demonstration Screenshot" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+                    <p style="font-style: italic; margin-top: 10px; color: #666; margin-bottom: 20px;">
+                      Figure: When the victim attempts to register using their own email address after the attacker's preemptive registration, Spotify displays an error message indicating that the email address is already associated with an existing account.
+                    </p>
+                    <img src="./static/images/question/Spotify - T2（2）.png" alt="Spotify T1 Second Screenshot" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: The compromised authentication flow that forces victims into the attacker-pre-created account.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Covert Account Sharing:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim believes they have successfully created their own account, but in reality, they are sharing access with an attacker. The attacker maintains full control through the password they set during pre-registration, enabling parallel access to playlists, listening history, and subscription management.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">OAuth Bypass Vulnerability:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The system's logic to prevent duplicate accounts blocks legitimate OAuth registration, forcing users into a compromised authentication path. This defeats the security benefits of OAuth and creates a false sense of security.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Gateway to Escalation:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        This initial foothold enables attackers to execute more severe attacks like T3 (Account Takeover) or T5 (Backdoor Planting).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Problem 4.2: T3 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T3-Spotify">T3: Account Takeover via Password-Only Email Change</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    Once an attacker has access to a Spotify account (for example, through T1), they can permanently seize ownership by changing the primary email address. This attack corresponds to <strong>T3</strong> and exploits <strong>Q5</strong>: the platform only requires the current password and never verifies or notifies the original email address. The email change process does not send verification codes to either the old or new email—only password confirmation is required.
+                  </p>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attack Process:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">
+                        While logged into the compromised account (established via T1), the attacker navigates to <strong>Account Settings &gt; Email</strong>.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The attacker enters a new attacker-controlled email address: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The system prompts only for the <strong>current password</strong> (which the attacker knows from the pre-registration phase).
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        After entering the password, the email change is executed immediately.
+                      </li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> The platform updates the primary identifier <strong>without</strong> sending verification codes to either the old email (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>) or the new email (<code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker@gmail.com</code>). No notification is sent to the victim.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Discovery:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim attempts to log in using their original email <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>.</li>
+                      <li style="margin-bottom: 8px;">The system responds with: <strong>"Account not found"</strong> or <strong>"Invalid email"</strong>.</li>
+                      <li style="margin-bottom: 8px;">The victim attempts password recovery, but the recovery email is sent to the attacker-controlled address.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; font-weight: bold; color: #0c5460;">
+                      <strong>Result:</strong> The victim is permanently locked out and has lost all access to their account, playlists, and subscription.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Irreversible Account Theft:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim permanently loses ownership of the account. Since no verification was sent to either email address, there is no audit trail to prove ownership to customer support. The attacker now controls the account's primary identifier, enabling complete control over subscriptions, payment methods, and listening history.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Financial Impact:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        If the victim had a premium subscription, the attacker can continue using it, potentially running up charges or modifying payment information. The victim has no way to cancel the subscription through normal means.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Data Loss:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Years of curated playlists, listening history, and personalized recommendations are permanently lost to the victim, while the attacker gains access to this valuable profile data.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Problem 4.3: T5 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T5-Spotify">T5: Opaque OAuth Backdoor via Hidden Identity Providers</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    Spotify provides a management interface for connected identity providers (IdPs), but this interface suffers from <strong>Q10</strong>: it only displays which IdP types are connected (e.g., "Google" or "Facebook") without revealing the specific account email addresses. This opaque design allows attackers to plant persistent backdoors that victims cannot effectively identify or remove.
+                  </p>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attack Process:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">
+                        While authenticated in the compromised account (via T1), the attacker navigates to <strong>Account Settings &gt; Connected Apps</strong> or similar OAuth management page.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The attacker clicks <strong>"Connect Google"</strong> or <strong>"Connect Facebook"</strong> and selects an attacker-controlled account to link.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The system binds the new OAuth method without requiring re-authentication or password confirmation (<strong>Q8</strong>).
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The management interface updates to show that "Google" (or "Facebook") is now connected, but does not display which specific Google account email address is bound.
+                      </li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> The UI displays only generic IdP names (e.g., "Connected to Google"), making it impossible for the victim to distinguish between their own legitimate Google account and the attacker's malicious binding.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Attempted Remediation:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">The victim suspects a breach and navigates to the OAuth management page.</li>
+                      <li style="margin-bottom: 8px;">The victim sees "Google" listed as connected and assumes it is their own account, since they may have used Google OAuth previously.</li>
+                      <li style="margin-bottom: 8px;">Even if suspicious, the victim cannot verify which Google account is bound, as the interface only shows "Connected to Google" without revealing the email address.</li>
+                      <li style="margin-bottom: 8px;">The victim may disconnect Google, but the attacker (still logged in) can immediately reconnect it, creating a "revolving door" vulnerability.</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; font-weight: bold; color: #0c5460;">
+                      <strong>Critical Flaw:</strong> The management interface provides no visibility into the actual bound accounts, preventing effective security audits and remediation.
+                    </div>
+                  </div>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/Spotify - T5.png" alt="Spotify T5 OAuth Management Interface" class="zoomable" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: Spotify's opaque OAuth management interface that only displays IdP types without revealing specific account email addresses.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Hidden Shadow Credential:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The OAuth binding serves as a persistent backdoor that bypasses password resets and email changes. Even if the victim changes their password or primary email, the attacker retains access through the bound OAuth account, which remains invisible due to the opaque UI design.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Impossible Security Audit:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim cannot perform a meaningful security audit because the interface hides the specific account details. This creates a false sense of security, as the victim believes they can see all connected accounts when in reality the critical information is obscured.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Permanent Access Channel:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The backdoor persists indefinitely, allowing the attacker to maintain long-term access for surveillance, data exfiltration, or further account manipulation without the victim's knowledge.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Problem 4.4: T7 -->
+                <div style="margin-top: 30px; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                  <h3 class="title is-4" id="T7-Spotify">T7: Permanent Account Lockout via Identifier Hijacking</h3>
+                  
+                  <h4 class="title is-5" style="margin-top: 20px;">Demonstration</h4>
+                  <p style="margin-bottom: 20px;">
+                    In the most severe escalation, an attacker who has preemptively registered an account (T1) can permanently lock the legitimate user out by changing the email address to a different attacker-controlled address. This attack corresponds to <strong>T7</strong> and exploits <strong>Q3</strong> (Premature Identifier Lock). After the email change, the victim's email address enters a state where it cannot be used for login, registration, or Google OAuth, effectively creating a permanent denial of service.
+                  </p>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #856404;">Attack Escalation:</h5>
+                    <ol style="margin-left: 20px; padding-left: 10px; line-height: 1.8;">
+                      <li style="margin-bottom: 8px;">
+                        The attacker has already pre-created an account with the victim's email via T1, establishing initial access.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        Using the password from the pre-registration phase, the attacker logs into the account and navigates to email settings.
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The attacker changes the primary email from <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code> to a different attacker-controlled address: <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">attacker2@gmail.com</code> (using T3).
+                      </li>
+                      <li style="margin-bottom: 8px;">
+                        The change completes immediately, and the victim's email is detached from the account without any notification.
+                      </li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #fff9e6; border-radius: 4px; color: #856404;">
+                      <strong>Observation:</strong> The victim's email address is now in an ambiguous state: it is no longer associated with any active account, but the system remembers that it was previously used, preventing its reuse.
+                    </div>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #0c5460;">Victim's Failed Attempts:</h5>
+                    <div style="margin-bottom: 15px;">
+                      <h6 style="font-weight: bold; margin-bottom: 8px; color: #0c5460;">Attempt 1: Standard Login</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim tries to log in using <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>. The system responds: <strong>"Account not found"</strong> or <strong>"Invalid email"</strong>.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                      <h6 style="font-weight: bold; margin-bottom: 8px; color: #0c5460;">Attempt 2: New Registration</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim attempts to create a new account using <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>. The system blocks registration with: <strong>"Email already registered"</strong> or <strong>"This email is already in use"</strong>, despite the email not being associated with any accessible account.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 8px; color: #0c5460;">Attempt 3: Google OAuth</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim clicks <strong>"Continue with Google"</strong> and selects <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace;">victim@gmail.com</code>. The system detects a conflict and redirects to login instead of creating an account, trapping the victim in a loop.
+                      </p>
+                    </div>
+                    <div style="margin-top: 12px; padding: 10px; background-color: #e7f3f5; border-radius: 4px; font-weight: bold; color: #0c5460;">
+                      <strong>Result:</strong> The victim's email is permanently locked out of Spotify, unable to register, log in, or use OAuth authentication.
+                    </div>
+                  </div>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <img src="./static/images/question/Spotify - T7（1）.png" alt="Spotify T7 First Screenshot" class="zoomable" style="max-width: 800px; width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
+                    <p style="font-style: italic; margin-top: 10px; color: #666; margin-bottom: 20px;">
+                      Figure: The ambiguous account state that prevents standard login.
+                    </p>
+                    <img src="./static/images/question/Spotify - T7(2).png" alt="Spotify T7 Second Screenshot" class="zoomable" style="max-width: 800px; width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
+                    <p style="font-style: italic; margin-top: 10px; color: #666; margin-bottom: 20px;">
+                      Figure: The registration block that prevents new account creation.
+                    </p>
+                    <img src="./static/images/question/Spotify - T7 (3).png" alt="Spotify T7 Third Screenshot" class="zoomable" style="max-width: 800px; width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); display: block; margin-left: auto; margin-right: auto;">
+                    <p style="font-style: italic; margin-top: 10px; color: #666;">
+                      Figure: The OAuth conflict that traps users in an unresolvable authentication loop.
+                    </p>
+                  </div>
+
+                  <div style="margin: 20px 0; padding: 20px; background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
+                    <h5 style="font-size: 1.1em; font-weight: bold; margin-bottom: 15px; color: #721c24;">Impact and Consequences:</h5>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Permanent Denial of Service:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        The victim is permanently unable to use Spotify with their primary email address. This creates a denial of service that persists indefinitely, as the system's account state management prevents any legitimate use of the email while simultaneously blocking registration attempts.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">OAuth Bypass Exploitation:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Even the security benefits of OAuth are neutralized, as the system's conflict resolution logic forces users into a broken authentication state. This demonstrates how poor account state management can undermine stronger authentication methods.
+                      </p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Support System Overload:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        Victims have no self-service remediation path and must contact customer support. However, without an audit trail (since no notifications were sent), proving account ownership becomes difficult, leading to lengthy support processes and potential account recovery failures.
+                      </p>
+                    </div>
+                    <div>
+                      <h6 style="font-weight: bold; margin-bottom: 10px; color: #721c24;">Account State Corruption:</h6>
+                      <p style="margin-bottom: 0; line-height: 1.8;">
+                        This attack exposes a fundamental flaw in Spotify's account state management: the system maintains inconsistent state information that creates ambiguous, unresolvable situations for legitimate users while enabling persistent attacker control.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--/ Case 4 -->
+      </div>
+    </section>
+    
+    
+    
+    
+    <footer class="footer">
+      <div class="container">
+        <div class="content has-text-centered">
+          <!-- Links removed for anonymity -->
+        </div>
+        <div class="columns is-centered">
+          <div class="column is-8">
+            <div class="content">
+              <p>
+                This website is licensed under a <a rel="license"
+                                                    href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+                Commons Attribution-ShareAlike 4.0 International License</a>.
+              </p>
+              <p>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    
+    <!-- Add modal div at the end of body but before closing body tag -->
+    <div id="imageModal" class="modal-image">
+      <span id="modalCloseBtn">&times;</span>
+      <img class="modal-content" id="modalImg">
+      <div class="zoom-instructions">Click the image to zoom further</div>
+    </div>
+    
+    <script>
+    // Image zoom functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get modal elements
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      const closeBtn = document.getElementById('modalCloseBtn');
+      const zoomInstructions = document.querySelector('.zoom-instructions');
+    
+      // Add click handlers to all zoomable images
+      document.querySelectorAll('.zoomable').forEach(function(img) {
+        img.onclick = function() {
+          modal.style.display = 'block';
+          modalImg.src = this.src;
+          zoomInstructions.style.display = 'block';
+          modalImg.classList.remove('zoomed');
+        };
+      });
+    
+      // Toggle zoom on modal image click
+      modalImg.onclick = function(e) {
+        e.stopPropagation();
+        this.classList.toggle('zoomed');
+      };
+    
+      // Close modal when clicking X
+      closeBtn.onclick = function() {
+        modal.style.display = 'none';
+        zoomInstructions.style.display = 'none';
+      };
+    
+      // Close modal when clicking outside
+      modal.onclick = function(e) {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+          zoomInstructions.style.display = 'none';
+        }
+      };
+    
+      // Initialize vulnerable sites carousel
+      bulmaCarousel.attach('#vulnerable-sites-carousel', {
+        slidesToShow: 2,
+        slidesToScroll: 1,
+        loop: true,
+        autoplay: false,
+        pagination: true,
+        breakpoints: [
+          { changePoint: 768, slidesToShow: 1 }
+        ],
+        gap: 20
+      });
+
+      // Initialize malicious apps carousel with same settings
+      bulmaCarousel.attach('#malicious-apps-carousel', {
+        slidesToShow: 2,
+        slidesToScroll: 1,
+        loop: true,
+        autoplay: false,
+        pagination: true,
+        breakpoints: [
+          { changePoint: 768, slidesToShow: 1 }
+        ],
+        gap: 20
+      });
+    });
+    </script>
+    </body>
+</html>

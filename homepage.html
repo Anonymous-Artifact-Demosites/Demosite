@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="./static/js/access-control.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Tower of Babel: Systematically Analyzing Account Management Vulnerabilities in Web OAuth Integration">
+  <title>The Tower of Babel: OAuth Account Management Vulnerabilities</title>
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <style>
+    /* Make the body a flex container to push content vertically */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background-color: #fafafa;
+    }
+    
+    /* Allow the demo selection section to grow and take up available space */
+    .demo-selection {
+        flex: 1;
+        display: flex;
+        align-items: center; /* Vertically center the cards */
+        padding-top: 1rem;
+        padding-bottom: 10rem; /* Larger bottom padding shifts the vertical center upwards */
+    }
+
+    .demo-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+        border-radius: 12px; /* Slightly larger radius */
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        min-height: 400px; /* Increased min-height */
+        border: 1px solid #eaeaea; /* Subtle border */
+    }
+    .demo-card:hover {
+        transform: translateY(-8px); /* Increased hover lift */
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1); /* Stronger shadow */
+    }
+    .card-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Ensures content (icons/text) is horizontally centered */
+        padding: 4rem 2rem; /* Significantly increased padding */
+    }
+    .card-title {
+        color: #3273dc;
+        font-weight: 700; /* Bolder font */
+        margin-bottom: 1.5rem;
+        font-size: 1.75rem; /* Larger title */
+    }
+    .card-title:hover {
+        text-decoration: underline;
+    }
+    .content {
+        flex: 1;
+        font-size: 1.2rem; /* Larger text */
+        line-height: 1.6;
+    }
+    .card-footer {
+        margin-top: auto;
+        padding: 1rem 0; /* Add padding to footer */
+    }
+    .card-footer-item {
+        padding: 1rem; /* Larger footer item padding */
+    }
+  </style>
+</head>
+<body>
+
+  <section class="hero is-light" style="background-color: #f5f5f5; padding-top: 6rem; padding-bottom: 3rem;">
+    <div class="hero-body" style="padding: 0;">
+      <div class="container has-text-centered">
+        <h1 class="title is-2" style="margin-bottom: 2.5rem;">
+          The Tower of Babel: Systematically Analyzing Account Management Vulnerabilities in Web OAuth Integration
+        </h1>
+        <h2 class="subtitle is-4">
+          Case Studies & Interactive Workflow
+        </h2>
+        <div class="is-size-4" style="margin-top: 2rem;">
+          <p class="has-text-grey-dark">Anonymous Researchers</p>
+          <p class="has-text-grey">Anonymous Institution</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section demo-selection">
+    <div class="container">
+      <div class="columns is-centered is-variable" style="gap: 4rem;"> 
+        
+        <!-- Video Demos -->
+        <div class="column is-5">
+          <div class="card demo-card">
+            <div class="card-content has-text-centered">
+              <span class="icon is-large" style="margin-bottom: 2rem; color: #8e44ad;"> 
+                <i class="fas fa-video fa-5x"></i>
+              </span>
+              <p class="title is-4">
+                <a href="video.html" class="card-title"> Empirical Case Studies</a>
+              </p>
+              <div class="content">
+                <p>
+                  Explore real-world case studies that demonstrate the 7 Attack Vectors (T1–T7). See how attackers chain specific Vulnerability Primitives (Q1-Q10) to compromise accounts on major platforms.
+                </p>
+              </div>
+            </div>
+            <footer class="card-footer">
+              <a href="video.html" class="card-footer-item has-text-link is-size-5">View Case Studies</a>
+            </footer>
+          </div>
+        </div>
+
+        <!-- Workflow Visualization -->
+        <div class="column is-5">
+          <div class="card demo-card">
+            <div class="card-content has-text-centered">
+              <span class="icon is-large" style="margin-bottom: 2rem; color: #3273dc;">
+                <i class="fas fa-project-diagram fa-5x"></i>
+              </span>
+              <p class="title is-4">
+                <a href="workflow.html" class="card-title">The Workflow of Hybrid Account management</a>
+              </p>
+              <div class="content">
+                <p>
+                  Interactively explore the logical deviations that lead to the 10 Vulnerability Primitives (Q1–Q10) within the standard state transition lifecycle.
+                </p>
+              </div>
+            </div>
+            <footer class="card-footer">
+              <a href="workflow.html" class="card-footer-item has-text-link is-size-5">Explore the Workflow</a>
+            </footer>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // 从当前 URL 获取 code 参数，并自动添加到所有跳转链接中
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      if (code) {
+        // 找到所有指向 video.html 和 workflow.html 的链接
+        const links = document.querySelectorAll('a[href="video.html"], a[href="workflow.html"]');
+        links.forEach(function(link) {
+          const href = link.getAttribute('href');
+          // 检查链接是否已经有参数
+          if (href.indexOf('?') === -1) {
+            link.setAttribute('href', href + '?code=' + encodeURIComponent(code));
+          } else {
+            // 如果已经有参数，追加 code 参数
+            link.setAttribute('href', href + '&code=' + encodeURIComponent(code));
+          }
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>
