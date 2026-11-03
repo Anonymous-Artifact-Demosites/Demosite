@@ -1,925 +1,402 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <script src="./static/js/access-control.js"></script>
     <meta charset="UTF-8">
+    <script src="./static/js/access-control.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Ship of Theseus: Systematizing Identity State Desynchronization in Web OAuth-based Account Integration - Workflow Visualization">
-    <title>Hybrid Account Management Workflow</title>
-    
-    <!-- Fonts and Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Code Highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-
-    <style>
-        :root {
-            --bg-color: #f1f5f9;
-            --sidebar-width: 600px; /* Fixed width on the right - slightly wider to accommodate table */
-            --primary-text: #1e293b;
-            --line-color: #475569;
-            --box-fill: #ffffff;
-            --box-stroke: #334155;
-            --pink-fill: #ffe4e6;
-            --pink-stroke: #f43f5e;
-            --pink-hover: #fda4af;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--primary-text);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Prevent overall page scrollbar */
-        }
-
-        /* Top Navigation */
-        header {
-            height: 80px; /* Increased height */
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            padding: 0 32px; /* Increased padding */
-            flex-shrink: 0; /* Prevent header from being compressed */
-            z-index: 50;
-        }
-        header h1 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
-        .badge { 
-            background: #dbeafe; 
-            color: #1e40af; 
-            padding: 6px 12px; 
-            border-radius: 6px; 
-            font-size: 14px; /* Increased font size */
-            margin-left: 16px; 
-            font-weight: 700; 
-        }
-
-        /* Main Container: Left-Right Layout */
-        .main-container {
-            display: flex;
-            flex: 1; /* Take up remaining height */
-            height: calc(100vh - 80px); /* Subtract new header height */
-            overflow: hidden;
-            position: relative; /* Add relative positioning as reference for absolutely positioned child elements */
-        }
-
-        /* Left Canvas Area: Adaptive Scaling */
-        .canvas-pane {
-            flex: 1; /* Automatically fill remaining space */
-            background-color: #ffffff; /* Pure white canvas consistent with reference image */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden; /* SVG adaptive, no scrollbar needed */
-            padding: 20px;
-            position: relative;
-            user-select: none;
-        }
-
-        .svg-wrapper {
-            width: 100%;
-            height: 100%;
-            max-width: 1800px;
-            max-height: 1350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform-origin: center center;
-            transition: transform 0.1s ease;
-        }
-
-        /* SVG Settings */
-        svg {
-            width: 100%;
-            height: 100%;
-            /* Shadow and rounded corners */
-            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.05));
-        }
-
-        /* Right Sidebar: Floating Card Style */
-        .sidebar-pane {
-            width: var(--sidebar-width);
-            flex-shrink: 0;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            margin: 16px; 
-            height: auto; /* Height adapts to content */
-            max-height: calc(100% - 32px); /* Maximum height limit to prevent overflow */
-            align-self: center; /* Vertically centered */
-            display: flex;
-            flex-direction: column;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.03);
-            z-index: 40;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        /* Collapse sidebar directly when empty */
-        .sidebar-pane.is-collapsed {
-            width: 0;
-            margin: 16px 0; /* Keep vertical margin consistent, horizontal is 0 */
-            padding: 0;
-            border-width: 0;
-            opacity: 0;
-            box-shadow: none;
-            overflow: hidden;
-        }
-
-        .sidebar-content {
-            padding: 24px;
-            overflow-y: auto;
-            flex: 1;
-            display: none; /* Hidden by default */
-        }
-
-        .group-rect { fill: none; stroke: var(--box-stroke); stroke-width: 2; rx: 12; }
-        .group-label { font-size: 14px; font-weight: 700; fill: var(--primary-text); }
-
-        .node-rect { fill: var(--box-fill); stroke: var(--line-color); stroke-width: 1.5; rx: 6; }
-        .node-text { font-size: 11px; fill: var(--primary-text); font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
-
-        .diamond-shape { fill: var(--box-fill); stroke: var(--line-color); stroke-width: 1.5; }
-        .diamond-text { font-size: 11px; fill: var(--primary-text); text-anchor: middle; dominant-baseline: middle; font-weight: 600; }
-
-        .step-group { cursor: pointer; }
-        .step-rect {
-            fill: var(--pink-fill); stroke: var(--pink-stroke); stroke-width: 2; rx: 6;
-            transition: all 0.2s ease;
-        }
-        .step-group:hover .step-rect {
-            fill: var(--pink-hover); stroke-width: 2.5;
-            filter: drop-shadow(0 4px 8px rgba(244, 63, 94, 0.4));
-        }
-        .step-num { font-size: 10px; font-weight: 800; fill: #be123c; }
-
-        .link { fill: none; stroke: var(--line-color); stroke-width: 1.5; stroke-linejoin: round; }
-        .link-dashed { stroke-dasharray: 6, 4; }
-        
-        .icon-success { fill: white; stroke: #10b981; stroke-width: 2; }
-        .icon-error { fill: white; stroke: #ef4444; stroke-width: 2; }
-        .detail-tag {
-            display: inline-flex;
-            align-items: center;
-            background: #ffe4e6;
-            color: #be123c;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 24px;
-            border: 1px solid #fda4af;
-            white-space: nowrap;
-        }
-
-        h2 { 
-            margin: 0 0 16px 0; 
-            font-size: 32px; 
-            font-weight: 800;
-            color: #0f172a; 
-            line-height: 1.1;
-        }
-
-        p { 
-            font-size: 16px; 
-            line-height: 1.6; 
-            color: #475569; 
-            margin-bottom: 32px; 
-        }
-
-        .section-title {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #0f172a;
-            margin: 24px 0 12px 0;
-        }
-
-        /* Cases Table Styling */
-        .cases-wrapper {
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            overflow: hidden; /* For rounded corners */
-            background: white;
-        }
-        .cases-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            color: #334155;
-        }
-        .cases-table th {
-            background: #f1f5f9;
-            color: #475569;
-            font-weight: 700;
-            font-size: 11px;
-            text-transform: uppercase;
-            padding: 8px 12px; /* More compact */
-            text-align: left;
-            border-bottom: 1px solid #cbd5e1;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .cases-table td {
-            padding: 8px 12px; /* More compact */
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: top;
-            line-height: 1.5;
-        }
-        .cases-table tr:last-child td {
-            border-bottom: none;
-        }
-        .cases-table tr:hover {
-            background: #f8fafc;
-        }
-        .col-id {
-            color: #be123c;
-            font-weight: 700;
-            width: 40px;
-            text-align: center;
-        }
-        .col-site {
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        ul {
-            margin: 0 0 16px 18px;
-            padding: 0;
-            color: #475569;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        li {
-            margin-bottom: 8px;
-        }
-        
-        pre {
-            background: #1e293b; padding: 15px; border-radius: 8px;
-            font-size: 12px; color: #e2e8f0; overflow-x: auto;
-            border: 1px solid #334155;
-        }
-        
-        /* Empty State Hint Card: Floating on canvas (top-right hint) */
-        .empty-overlay {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            width: auto;
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-end;
-            color: #94a3b8;
-            text-align: center;
-            pointer-events: none; /* Don't block SVG clicks */
-            z-index: 20;
-        }
-        .empty-overlay .empty-card {
-            width: 100%;
-            max-width: 360px;
-            padding: 22px 18px;
-            border-radius: 14px;
-            border: 1px solid #cbd5e1; /* Dashed line -> Solid line */
-            background: #ffffff;      /* Solid white interior */
-            pointer-events: none;
-        }
-        .empty-overlay i { font-size: 40px; margin-bottom: 14px; color: #cbd5e1; }
-        .empty-overlay p { margin: 0; }
-
-        /* Animation */
-        .slide-in { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* Zoom Controls, only applies to flowchart */
-        .zoom-controls {
-            position: absolute;
-            left: 24px;
-            bottom: 24px;
-            background: rgba(255,255,255,0.95);
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
-            border-radius: 12px;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 10;
-        }
-        .zoom-controls button {
-            width: 32px;
-            height: 32px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .zoom-controls input[type="range"] {
-            width: 120px;
-            accent-color: #f43f5e;
-        }
-        .zoom-value {
-            min-width: 48px;
-            text-align: right;
-            font-size: 12px;
-            color: #475569;
-            font-weight: 600;
-        }
-    </style>
+    <meta name="description" content="Ship of Theseus — an interactive reference model of the hybrid account lifecycle and its vulnerability primitives.">
+    <title>The workflow of hybrid account management · Ship of Theseus</title>
+    <link rel="stylesheet" href="./static/css/workflow.css?v=19">
 </head>
 <body>
-
-    <header>
-        <h1>Ship of Theseus: Hybrid Account Management Workflow</h1>
-        <span class="badge">Standard State Transitions</span>
+    <header class="page-header">
+        <div class="header-identity"><a class="home-link" href="homepage.html" aria-label="Research home"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/></svg></a><div><h1>The workflow of hybrid account management</h1></div></div>
+        
     </header>
+    <main class="workspace">
+        <div class="model-toolbar"><nav class="phase-tabs" aria-label="Focus a lifecycle phase"><button type="button" class="phase-tab is-active" data-view="all" aria-pressed="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Full lifecycle</span></button><button type="button" class="phase-tab" data-view="registration" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="9" r="2.5"/><path d="M8 17c0-4 8-4 8 0"/></svg><span>Registration</span></button><button type="button" class="phase-tab" data-view="linking" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 13 4-4m-5 6-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 0)"/></svg><span>Account linking</span></button><button type="button" class="phase-tab" data-view="management" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="white"/><circle cx="15" cy="17" r="3" fill="white"/></svg><span>Management</span></button></nav><div class="toolbar-actions"><button type="button" class="text-button flow-toggle" id="toggle-flow" aria-label="Toggle branch flow animation" aria-pressed="false" title="Pause or resume branch flow"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path id="flow-toggle-icon" d="M9 5v14M15 5v14"/></svg><span class="sr-only" id="flow-toggle-label">Flow on</span></button><button type="button" class="text-button" id="reset-view" aria-label="Reset view" title="Reset view"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span class="sr-only">Reset view</span></button></div></div>
+        <div class="main-container">
+            <section class="canvas-pane" aria-label="Interactive lifecycle diagram">
+                
+                <div class="diagram-viewport" id="diagram-viewport"><div class="svg-wrapper" id="svg-wrapper"><svg viewBox="40 20 1740 1020" preserveAspectRatio="xMidYMid meet" id="workflow-diagram" role="group" aria-labelledby="diagram-title diagram-desc">
+                <title id="diagram-title">The workflow of hybrid account management and ten vulnerability primitives</title><desc id="diagram-desc">First-party and third-party registration converge on account linking, followed by identifier and identity-provider management. Select any Q marker to inspect its details.</desc><defs>
+                    <marker id="arrow" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="7" refX="8.5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 0.8 L8.5 4 L1 7.2 L2.5 4 Z" fill="#718391" /></marker><symbol id="icon-identity" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" /><circle cx="12" cy="9" r="2.5" /><path d="M8 17c0-4 8-4 8 0" /></symbol><symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18" /></symbol><symbol id="icon-link" viewBox="0 0 24 24"><path d="m10 13 4-4m-5 6-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 0)" /></symbol><symbol id="icon-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="white" /><circle cx="15" cy="17" r="3" fill="white" /></symbol><marker id="arrow-yes" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="7" refX="8.5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 0.8 L8.5 4 L1 7.2 L2.5 4 Z" fill="#4c9c83" /></marker><marker id="arrow-no" viewBox="0 0 10 8" markerWidth="8.5" markerHeight="7" refX="8.5" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 0.8 L8.5 4 L1 7.2 L2.5 4 Z" fill="#c28b62" /></marker><symbol id="object-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5" fill="var(--icon-wash)" /><path d="M10 5h4M10 19h4" /></symbol><symbol id="object-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2.5" fill="var(--icon-wash)" /><path d="m3 6 9 7 9-7M3 18l6-6m12 6-6-6" /></symbol><symbol id="object-message" viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-9l-5 3v-3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="var(--icon-wash)" /><circle cx="7.5" cy="11" r=".8" /><circle cx="12" cy="11" r=".8" /><circle cx="16.5" cy="11" r=".8" /></symbol><symbol id="object-code" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="var(--icon-wash)" /><path d="M7 10v4m-2-2h4m3-2v4m-2-2h4m3-2v4m-2-2h4" /></symbol><symbol id="object-identity" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2.5" fill="var(--icon-wash)" /><circle cx="8" cy="10" r="2" /><path d="M4.5 16c.4-4 6.6-4 7 0M15 9h4m-4 4h4" /></symbol><symbol id="object-verify" viewBox="0 0 24 24"><path d="m12 2 8 3v6c0 5-3.5 8.3-8 11-4.5-2.7-8-6-8-11V5Z" fill="var(--icon-wash)" /><path d="m8 12 3 3 5-6" /></symbol><symbol id="object-session" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="17" rx="2.5" fill="var(--icon-wash)" /><path d="M2 8h20m-16-3h.01m3 0h.01" /><rect x="9" y="13" width="7" height="5" rx="1" fill="white" /><path d="M10 13v-1a2.5 2.5 0 0 1 5 0v1" /></symbol><symbol id="object-provider" viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16Z" fill="var(--icon-wash)" /><path d="M2 21h20M8 7h1m6 0h1M8 11h1m6 0h1M10 21v-6h4v6" /></symbol><symbol id="object-login" viewBox="0 0 24 24"><path d="M10 3h10v18H10" fill="var(--icon-wash)" /><path d="M2 12h12m-4-4 4 4-4 4M17 12h.01" /></symbol><symbol id="object-authorization" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="19" rx="2" fill="var(--icon-wash)" /><rect x="8" y="1.5" width="8" height="4" rx="1.5" fill="white" /><path d="m8 13 3 3 5-6" /></symbol><symbol id="object-id-check" viewBox="0 0 24 24"><circle cx="8" cy="6" r="3" fill="var(--icon-wash)" /><path d="M2 19v-2c0-7 12-7 12 0v2Z" fill="var(--icon-wash)" /><path d="m16 13 2 2 4-5" /></symbol><symbol id="object-id-missing" viewBox="0 0 24 24"><circle cx="8" cy="6" r="3" fill="var(--icon-wash)" /><path d="M2 19v-2c0-7 12-7 12 0v2Z" fill="var(--icon-wash)" /><path d="M17 12h5" /></symbol><symbol id="object-bind" viewBox="0 0 24 24"><rect x="2" y="3" width="13" height="17" rx="2" fill="var(--icon-wash)" /><circle cx="8.5" cy="8" r="2" /><path d="M5 15c0-3 7-3 7 0m4-1 2-2a2 2 0 0 1 3 3l-2 2a2 2 0 0 1-3-3m2 2-2 2a2 2 0 0 1-3-3" /></symbol><symbol id="object-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4" fill="var(--icon-wash)" /><path d="M4 21v-2c0-9 16-9 16 0v2Z" fill="var(--icon-wash)" /></symbol><symbol id="object-user-linked" viewBox="0 0 24 24"><circle cx="9" cy="6" r="3.5" fill="var(--icon-wash)" /><path d="M2 20v-2c0-7 14-7 14 0v2Z" fill="var(--icon-wash)" /><path d="m15 12 2-2a2.5 2.5 0 0 1 4 4l-2 2m-1-3-2 2a2.5 2.5 0 0 0 4 4l2-2" /></symbol><symbol id="object-bell" viewBox="0 0 24 24"><path d="M5 16v-6a7 7 0 0 1 14 0v6l2 3H3Z" fill="var(--icon-wash)" /><path d="M9 21h6M12 2v2" /></symbol><symbol id="object-edit-id" viewBox="0 0 24 24"><rect x="2" y="3" width="15" height="18" rx="2" fill="var(--icon-wash)" /><circle cx="8.5" cy="8" r="2" /><path d="M5 15h6m3 5 1-5 5-5 3 3-5 5Z" fill="white" /></symbol><symbol id="object-logout" viewBox="0 0 24 24"><rect x="2" y="3" width="15" height="18" rx="2" fill="var(--icon-wash)" /><path d="M2 8h15M11 15h11m-4-4 4 4-4 4" /></symbol><symbol id="object-link" viewBox="0 0 24 24"><path d="m10 13 4-4m-5 6-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 0)" /></symbol><symbol id="object-unlink" viewBox="0 0 24 24"><path d="m8 16-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 5-1m5 1 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-5 1M3 3l18 18" /></symbol><symbol id="object-revoke" viewBox="0 0 24 24"><circle cx="7" cy="8" r="5" fill="var(--icon-wash)" /><path d="m10.5 11.5 8 8m-4-4 2-2m1 5 2-2M17 3l5 5m0-5-5 5" /></symbol></defs>
 
-    <div class="main-container">
-        <!-- Left: Adaptive SVG Canvas -->
-        <div class="canvas-pane">
-            <div class="zoom-controls">
-                <button id="zoom-out" aria-label="Zoom out">-</button>
-                <input id="zoom-range" type="range" min="0.7" max="2.0" step="0.05" value="1">
-                <button id="zoom-in" aria-label="Zoom in">+</button>
-                <span class="zoom-value" id="zoom-value">100%</span>
-            </div>
-            <div class="svg-wrapper" id="svg-wrapper">
-            <svg viewBox="0 0 2100 1400" preserveAspectRatio="xMidYMid meet">
-                <defs>
-                    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
-                    </marker>
-                </defs>
+                
+                <g class="phase-backgrounds"><g transform="translate(80, 50)" class="phase-registration" data-phase="registration"><rect x="0" y="0" width="1180" height="280" class="group-rect" />
+                    </g><g transform="translate(80, 360)" class="phase-oauth" data-phase="oauth"><rect x="0" y="0" width="1180" height="160" class="group-rect" />
+                    </g><g transform="translate(1360, 50)" class="phase-linking" data-phase="linking"><rect x="0" y="0" width="380" height="470" class="group-rect" />
+                    </g><g transform="translate(80, 580)" class="phase-management" data-phase="management"><rect x="0" y="0" width="1180" height="420" class="group-rect" />
+                    </g></g><g transform="translate(80, 50)" data-phase="registration">
+                    <g class="phase-icon phase-registration" transform="translate(24 16)"><rect width="28" height="28" rx="7" /><use href="#icon-identity" x="5" y="5" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></g><text x="66" y="35" class="group-label">First-Party Registration</text>
 
-                <!-- ==============================================
-                     1. First Party Registration (Left Top)
-                     ============================================== -->
-                <g transform="translate(80, 70)">
-                    <rect x="0" y="0" width="1050" height="320" class="group-rect" />
-                    <text x="25" y="35" class="group-label">First Party Registration</text>
-
-                    <!-- Input ID -->
-                    <g transform="translate(25, 110)">
-                        <rect width="80" height="40" class="node-rect"/>
-                        <text x="40" y="23" class="node-text">Input ID</text>
-                    </g>
-                    <path d="M105 130 L180 130" class="link" marker-end="url(#arrow)"/>
-
-                    <!-- Step 1: Verify ID -->
-                    <g class="step-group" onclick="showDetail('step1')" transform="translate(180, 110)">
-                        <rect width="90" height="40" class="step-rect"/>
-                        <text x="12" y="16" class="step-num">1</text>
-                        <text x="47" y="25" class="node-text">Verify ID</text>
-                    </g>
-
-                    <!-- Split Path -->
-                    <path d="M270 130 L300 130" class="link"/>
-                    <path d="M300 130 L300 80 L340 80" class="link" marker-end="url(#arrow)"/> <!-- Up -->
-                    <path d="M300 130 L300 180 L340 180" class="link" marker-end="url(#arrow)"/> <!-- Down -->
-
-                    <!-- Phone Path (Up) -->
-                    <g transform="translate(340, 60)">
-                        <rect width="110" height="40" class="node-rect"/>
-                        <text x="55" y="23" class="node-text">Phone number</text>
-                    </g>
-                    <path d="M450 80 L490 80" class="link" marker-end="url(#arrow)"/>
-                    <g transform="translate(490, 60)">
-                        <rect width="90" height="40" class="node-rect"/>
-                        <text x="45" y="23" class="node-text">SMS OTP</text>
-                    </g>
-                    <!-- Phone Merge -->
-                    <path d="M580 80 L630 80 L630 120" class="link"/>
-
-                    <!-- Email Path (Down) -->
-                    <g transform="translate(340, 160)">
-                        <rect width="110" height="40" class="node-rect"/>
-                        <text x="55" y="23" class="node-text">Email Address</text>
-                    </g>
-                    <path d="M450 175 L490 175" class="link" marker-end="url(#arrow)"/>
-                    <path d="M450 185 L470 185 L470 215 L490 215" class="link" marker-end="url(#arrow)"/>
                     
-                    <!-- Stacked OTP/Link -->
-                    <g transform="translate(490, 160)">
-                        <rect width="90" height="30" class="node-rect"/>
-                        <text x="45" y="17" class="node-text">OTP</text>
-                    </g>
+                    <g transform="translate(25, 110)" data-object="identity">
+                        <rect width="80" height="40" class="node-rect" />
+                        <text x="40.0" y="31" class="node-text">Input ID</text>
+                    <use href="#object-identity" class="semantic-icon tone-blue" x="32.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                    <path d="M105 130 L180 130" class="link" marker-end="url(#arrow)" />
+
+                    
+                    <g class="step-group" transform="translate(180, 110)" data-step="step1" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q1" aria-pressed="false" data-object="verify">
+                        <rect width="90" height="40" class="step-rect" />
+                        <text x="45.0" y="31" class="node-text">Verify ID</text>
+                    <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q1</text></g><use href="#object-verify" class="semantic-icon tone-green" x="37.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+
+                    
+                    <path d="M270 130 L300 130" class="link" />
+                    <path d="M300 130 L300 87 Q300 80 307 80 L340 80" class="link" marker-end="url(#arrow)" /> 
+                    <path d="M300 130 L300 173 Q300 180 307 180 L340 180" class="link" marker-end="url(#arrow)" /> 
+
+                    
+                    <g transform="translate(340, 60)" data-object="phone">
+                        <rect width="110" height="40" class="node-rect" />
+                        <text x="55.0" y="31" class="node-text">Phone Number</text>
+                    <use href="#object-phone" class="semantic-icon tone-blue" x="47.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                    <path d="M450 80 L490 80" class="link" marker-end="url(#arrow)" />
+                    <g transform="translate(490, 60)" data-object="message">
+                        <rect width="90" height="40" class="node-rect" />
+                        <text x="45.0" y="31" class="node-text">SMS OTP</text>
+                    <use href="#object-message" class="semantic-icon tone-blue" x="37.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                    
+                    <path d="M580 80 L623 80 Q630 80 630 87 L630 120" class="link" />
+
+                    
+                    <g transform="translate(340, 160)" data-object="mail">
+                        <rect width="110" height="40" class="node-rect" />
+                        <text x="55.0" y="31" class="node-text">Email Address</text>
+                    <use href="#object-mail" class="semantic-icon tone-blue" x="47.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                    <path d="M450 175 L490 175" class="link" marker-end="url(#arrow)" />
+                    <path d="M450 185 L463.333 185 Q470 185 470 191.667 L470 208.333 Q470 215 476.667 215 L490 215" class="link" marker-end="url(#arrow)" />
+                    
+                    
+                    <g transform="translate(490, 160)" data-object="code">
+                        <rect width="90" height="30" class="node-rect" />
+                        <text x="56" y="15.0" class="node-text">OTP</text>
+                    <use href="#object-code" class="semantic-icon tone-blue" x="21" y="7.5" width="15" height="15" aria-hidden="true" /></g>
                     <g transform="translate(490, 200)">
-                        <rect width="90" height="30" class="node-rect"/>
-                        <text x="45" y="17" class="node-text">Confirmation</text>
-                    </g>
-                    <!-- Email Merge -->
-                    <path d="M580 175 L630 175 L630 140" class="link"/>
-                    <path d="M580 215 L630 215 L630 140" class="link"/>
-
-                    <!-- Merge to Step 2 -->
-                    <path d="M630 120 L630 140 L690 140" class="link" marker-end="url(#arrow)"/>
-                    <path d="M630 140 L690 140" class="link" marker-end="url(#arrow)"/>
-
-                    <!-- Step 2 -->
-                    <g class="step-group" onclick="showDetail('step2')" transform="translate(690, 120)">
-                        <rect width="130" height="40" class="step-rect"/>
-                        <text x="12" y="16" class="step-num">2</text>
-                        <text x="67" y="25" class="node-text">Session Binding</text>
-                    </g>
-                    <path d="M820 140 L870 140" class="link" marker-end="url(#arrow)"/>
-
-                    <!-- Step 3 (Outside box slightly but logically connected) -->
-                    <g class="step-group" onclick="showDetail('step3')" transform="translate(870, 140)">
-                        <!-- Diamond center is (40, 0) relative to g -->
-                        <polygon points="40,-25 80,0 40,25 0,0" class="step-rect"/>
-                        <text x="40" y="2" class="node-text">Success?</text>
-                        <text x="35" y="-6" class="step-num">3</text>
-                    </g>
-
-                    <!-- Success (Y) to 1st Party Account - straight line (no arrowhead into 1st-party box) -->
-                    <path d="M950 140 L1190 140" class="link"/>
-                    <circle cx="1075" cy="140" r="8" class="icon-success"/>
-                    <text x="1075" y="144" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-
-                    <!-- Feedback Loop (N - Failure) -->
-                    <path d="M910 165 L910 250 L220 250 L220 155" class="link link-dashed" marker-end="url(#arrow)"/>
-                    <circle cx="570" cy="250" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="570" y="254" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
-                </g>
-
-                <!-- ==============================================
-                     2. Third Party Registration (Left Middle)
-                     ============================================== -->
-                <g transform="translate(80, 430)">
-                    <!-- Slightly narrowed while keeping the right-side diamonds inside -->
-                    <rect x="0" y="0" width="1200" height="270" class="group-rect" />
-                    <text x="25" y="35" class="group-label">Third Party Registration</text>
-
-                    <g transform="translate(25, 90)">
-                        <rect width="80" height="40" class="node-rect"/>
-                        <text x="40" y="23" class="node-text">Select IdP</text>
-                    </g>
-                    <path d="M105 110 L180 110" class="link" marker-end="url(#arrow)"/>
-
-                    <g transform="translate(180, 90)">
-                        <rect width="80" height="40" class="node-rect"/>
-                        <text x="40" y="23" class="node-text">Login</text>
-                    </g>
-                    <path d="M260 110 L310 110" class="link" marker-end="url(#arrow)"/>
-
-                    <g transform="translate(310, 90)">
-                        <rect width="110" height="40" class="node-rect"/>
-                        <text x="55" y="23" class="node-text">Authorization</text>
+                        <rect width="90" height="30" class="node-rect" />
+                        <text x="45.0" y="15.0" class="node-text">Confirmation</text>
                     </g>
                     
-                    <!-- Fork -->
-                    <path d="M420 110 L440 110" class="link"/>
-                    <path d="M440 110 L440 70 L480 70" class="link" marker-end="url(#arrow)"/> <!-- Up -->
-                    <path d="M440 110 L440 170 L480 170" class="link" marker-end="url(#arrow)"/> <!-- Down -->
+                    <path d="M580 175 L623 175 Q630 175 630 168 L630 140" class="link" />
+                    <path d="M580 215 L623 215 Q630 215 630 208 L630 140" class="link" />
 
-                    <!-- Provided -->
-                    <g transform="translate(480, 50)">
-                        <rect width="140" height="40" class="node-rect"/>
-                        <text x="70" y="23" class="node-text">Identifier Provided</text>
-                    </g>
-                    <!-- Solid line to 3rd Party Account (no arrowhead into 3rd-party box) -->
-                    <path d="M620 70 L1330 70 L1330 200" class="link"/>
-                    <circle cx="1000" cy="70" r="8" class="icon-success"/>
-                    <text x="1000" y="74" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-
-                    <!-- Missing -->
-                    <g transform="translate(480, 150)">
-                        <rect width="140" height="40" class="node-rect"/>
-                        <text x="70" y="23" class="node-text">Identifier Missing</text>
-                    </g>
-                    <path d="M620 170 L670 170" class="link" marker-end="url(#arrow)"/>
-
-                    <g transform="translate(670, 150)">
-                        <rect width="120" height="40" class="node-rect"/>
-                        <text x="60" y="23" class="node-text">Bind Identifier</text>
-                    </g>
-                    <path d="M790 170 L835 170" class="link" marker-end="url(#arrow)"/>
-
-                    <!-- Associated? -->
-                    <g transform="translate(905, 170)">
-                        <polygon points="70,0 140,34 70,68 0,34" class="diamond-shape" transform="translate(-70, -34)"/>
-                        <text x="0" y="-7" class="diamond-text" text-anchor="middle">Associated with</text>
-                        <text x="0" y="7" class="diamond-text" text-anchor="middle">Existing Account?</text>
-                    </g>
-                    <!-- N: To 3rd Party Account (no arrowhead into 3rd-party box) -->
-                    <path d="M905 204 L905 225 L1290 225" class="link link-dashed"/>
-                    <!-- Place the X on the longest dashed segment (center of the long horizontal run) -->
-                    <circle cx="1088" cy="225" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="1088" y="229" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
                     
-                    <!-- Right: To IdP Binding Exists -->
-                    <path d="M975 170 L1025 170" class="link" marker-end="url(#arrow)"/>
-                    
-                    <!-- Binding Exists? -->
-                    <g transform="translate(1095, 170)">
-                         <polygon points="70,0 140,34 70,68 0,34" class="diamond-shape" transform="translate(-70, -34)"/>
-                        <text x="0" y="-7" class="diamond-text" text-anchor="middle">IdP Binding</text>
-                        <text x="0" y="7" class="diamond-text" text-anchor="middle">Exists?</text>
-                    </g>
-                    
-                    <!-- Y: Loop back to Bind Identifier (from IdP Binding Exists) -->
-                    <path d="M1095 136 L1095 120 L750 120 L750 150" class="link" marker-end="url(#arrow)"/>
-                    <circle cx="900" cy="120" r="8" class="icon-success"/>
-                    <text x="900" y="124" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-                    
-                     <!-- Output to 1st Party Account - Dashed line (no arrow, blue path) -->
-                    <!-- Output to 1st Party Account - Dashed line (shifted slightly right) -->
-                    <path d="M1165 170 L1230 170 L1230 -40 L1230 -190" class="link link-dashed"/>
-                    <!-- Place the X on the dashed line (midpoint of the top horizontal segment) -->
-                    <circle cx="1198" cy="170" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="1198" y="174" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
-                </g>
+                    <path d="M630 120 L630 133.333 Q630 140 636.667 140 L690 140" class="link" marker-end="url(#arrow)" />
+                    <g class="step-group" transform="translate(690, 120)" data-step="step2" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q2" aria-pressed="false" data-object="session">
+                        <rect width="130" height="40" class="step-rect" />
+                        <text x="65.0" y="31" class="node-text">Session Binding</text>
+                    <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q2</text></g><use href="#object-session" class="semantic-icon tone-blue" x="57.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                    <path d="M820 140 L870 140" class="link" marker-end="url(#arrow)" />
 
-                <!-- 1st Party Account Indicator (Outside all boxes) -->
-                <g transform="translate(1270, 185)">
-                    <rect width="80" height="50" class="node-rect" style="stroke-dasharray:4,2"/>
-                    <text x="40" y="33" class="node-text" text-anchor="middle">1st-Party Acc.</text>
-                </g>
+                    
+                    <g class="step-group" transform="translate(870, 140)" data-step="step3" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q3" aria-pressed="false">
+                        
+                        <polygon points="40,-34 80,0 40,34 0,0" class="step-rect" />
+                        <text x="40" y="2.5" class="node-text" style="font-size:11.5px">Success?</text>
+                        <g class="q-marker" transform="translate(-12 -36)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q3</text></g></g>
 
-                <!-- 3rd Party User Node (Outside all boxes) -->
-                <g transform="translate(1370, 630)">
-                    <rect width="80" height="50" class="node-rect" style="stroke-dasharray:4,2"/>
-                    <text x="40" y="33" class="node-text" text-anchor="middle">3rd-Party Acc.</text>
-                </g>
+                    
+                    <path d="M950 140 L1070 140" class="link branch-yes" />
+                    <path d="M950 140 L1070 140" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-0.00s" /><g class="branch-label is-yes"><rect x="995" y="131.0" width="30" height="18" rx="4" /><text x="1010" y="143.7">YES</text></g><path d="M910 174 L910 243 Q910 250 903 250 L227 250 Q220 250 220 243 L220 155" class="link link-dashed branch-no" marker-end="url(#arrow-no)" />
+                    <path d="M910 174 L910 243 Q910 250 903 250 L227 250 Q220 250 220 243 L220 155" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-0.19s" /><g class="branch-label is-no"><rect x="555.0" y="241.0" width="30" height="18" rx="4" /><text x="570.0" y="253.7">NO</text></g></g>
+
                 
-                <!-- From 1st Party to merge point -->
-                <path d="M1350 210 L1480 210 L1480 380" class="link"/>
-                
-                <!-- From 3rd Party to merge point -->
-                <path d="M1450 655 L1480 655 L1480 380" class="link"/>
-                
-                <!-- Merged line to Account Co-exist -->
-                <path d="M1480 380 L1555 380" class="link" marker-end="url(#arrow)"/>
-
-                <!-- ==============================================
-                     3. Account Linking (Right Side)
-                     ============================================== -->
-                <g id="linking" transform="translate(1520, 220)">
-                    <!-- Keep the container style consistent with other groups -->
-                    <rect x="0" y="0" width="380" height="460" class="group-rect" />
-                    <text x="20" y="30" class="group-label">Account Linking</text>
-
-                    <!-- Step 4: Co-exist? (Big Diamond) -->
-                    <g class="step-group" onclick="showDetail('step4')" transform="translate(95, 160)">
-                        <polygon points="60,0 120,50 60,100 0,50" class="step-rect" transform="translate(-60, -50)"/>
-                        <text x="0" y="-8" class="node-text" style="font-weight:700; text-anchor:middle">Account</text>
-                        <text x="0" y="6" class="node-text" style="font-weight:700; text-anchor:middle">Co-exist?</text>
-                        <!-- step number should be inside the diamond -->
-                        <text x="-32" y="-16" class="step-num">4</text>
+                <g id="third-party-registration" transform="translate(80, 360)" data-phase="oauth">
+                    <g class="phase-icon phase-oauth" transform="translate(24 16)"><rect width="28" height="28" rx="7" /><use href="#icon-globe" x="5" y="5" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></g>
+                    <text x="66" y="35" class="group-label">Third-Party Registration</text>
+                    <g class="provider-examples" role="img" aria-label="Example identity providers: Apple, Google, Microsoft and Facebook">
+                        <title>Example Identity Providers: Apple, Google, Microsoft and Facebook</title>
+                        <image href="./static/images/identity-providers/apple.svg" x="25" y="76" width="28" height="30" />
+                        <image href="./static/images/identity-providers/google.svg" x="63" y="78" width="27" height="27" />
+                        <image href="./static/images/identity-providers/microsoft.svg" x="24" y="112" width="29" height="29" />
+                        <image href="./static/images/identity-providers/facebook.svg" x="64" y="113" width="26" height="26" />
                     </g>
-
-                    <!-- Y (From top corner to top corner with bends) -->
-                    <path d="M95 110 L95 45 L300 45 L300 75" class="link" marker-end="url(#arrow)"/>
-                    <circle cx="200" cy="47" r="8" class="icon-success"/>
-                    <text x="200" y="51" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-
-                    <!-- N (Down to Standalone) -->
-                    <path d="M95 210 L95 382" class="link link-dashed" marker-end="url(#arrow)"/>
-                    <circle cx="95" cy="296" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="95" y="300" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
-
-                    <!-- Matches? -->
-                    <g transform="translate(300, 100)">
-                        <polygon points="50,0 100,25 50,50 0,25" class="diamond-shape" transform="translate(-50, -25)"/>
-                        <text x="0" y="1" class="diamond-text" text-anchor="middle">ID Matches?</text>
+                    <g transform="translate(110, 90)" data-object="provider">
+                        <rect width="180" height="40" class="node-rect" />
+                        <text x="90" y="31" class="node-text">Select IdP</text>
+                        <use href="#object-provider" class="semantic-icon" x="82" y="1" width="16" height="16" aria-hidden="true" />
                     </g>
-                    <!-- Y (Down) -->
-                    <path d="M300 125 L300 185" class="link" marker-end="url(#arrow)"/>
-                    <circle cx="300" cy="150" r="8" class="icon-success"/>
-                    <text x="300" y="154" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
+                    <g transform="translate(430, 90)" data-object="login">
+                        <rect width="180" height="40" class="node-rect" />
+                        <text x="90" y="31" class="node-text">Login</text>
+                        <use href="#object-login" class="semantic-icon" x="82" y="1" width="16" height="16" aria-hidden="true" />
+                    </g>
+                    <g transform="translate(750, 90)" data-object="authorization">
+                        <rect width="180" height="40" class="node-rect" />
+                        <text x="90" y="31" class="node-text">Authorization</text>
+                        <use href="#object-authorization" class="semantic-icon" x="82" y="1" width="16" height="16" aria-hidden="true" />
+                    </g>
+                    <path d="M290 110 L430 110" class="link" marker-end="url(#arrow)" />
+                    <path d="M610 110 L750 110" class="link" marker-end="url(#arrow)" />
+                    <path d="M930 110 L1070 110" class="link" marker-end="url(#arrow)" />
+                    <text x="1000" y="98" class="node-text" text-anchor="middle">Create &amp; Bind</text>
+                </g>
+
+                <g transform="translate(1150, 165)" data-phase="registration" data-object="user" class="account-state">
+                    <rect width="80" height="50" class="node-rect" />
+                    <text x="40.0" y="39" class="node-text" text-anchor="middle" style="font-size:11.5px">1st-Party Acc.</text>
+                <use href="#object-user" class="semantic-icon tone-blue" x="29.0" y="3" width="22" height="22" aria-hidden="true" /></g>
+
+                
+                <g transform="translate(1150, 445)" data-phase="oauth" data-object="user-linked" class="account-state">
+                    <rect width="80" height="50" class="node-rect" />
+                    <text x="40.0" y="39" class="node-text" text-anchor="middle" style="font-size:11.5px">3rd-Party Acc.</text>
+                <use href="#object-user-linked" class="semantic-icon tone-green" x="29.0" y="3" width="22" height="22" aria-hidden="true" /><g class="account-provider-badge" role="img" aria-label="Google identity provider example">
+                    <title>Google Identity Provider Example</title>
+                    <circle cx="54" cy="21" r="8" fill="white" />
+                    <image href="./static/images/identity-providers/google.svg" x="48" y="15" width="12" height="12" />
+                </g></g>
+                
+                
+                <path d="M1230 190 L1303 190 Q1310 190 1310 197 L1310 210" class="link" />
+                
+                
+                <path d="M1230 470 L1303 470 Q1310 470 1310 463 L1310 210" class="link" />
+                
+                
+                <path d="M1310 210 L1395 210" class="link" marker-end="url(#arrow)" />
+
+                
+                <g id="linking" transform="translate(1360, 50)" data-phase="linking">
                     
-                    <!-- Link? -->
-                    <g transform="translate(300, 210)">
-                        <polygon points="50,0 100,25 50,50 0,25" class="diamond-shape" transform="translate(-50, -25)"/>
+                    <g class="phase-icon phase-linking" transform="translate(24 16)"><rect width="28" height="28" rx="7" /><use href="#icon-link" x="5" y="5" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></g><text x="66" y="35" class="group-label">Account Linking</text>
+
+                    
+                    <g class="step-group" transform="translate(95, 160)" data-step="step4" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q4" aria-pressed="false">
+                        <polygon points="60,0 120,50 60,100 0,50" class="step-rect" transform="translate(-60, -50)" />
+                        <text x="0" y="-8" class="node-text" style=" text-anchor:middle">Account</text>
+                        <text x="0" y="6" class="node-text" style=" text-anchor:middle">Co-exist?</text>
+                        
+                        <g class="q-marker" transform="translate(-64 -61)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q4</text></g></g>
+
+                    
+                    <path d="M95 110 L95 52 Q95 45 102 45 L293 45 Q300 45 300 52 L300 60" class="link branch-yes" marker-end="url(#arrow-yes)" />
+                    <path d="M95 110 L95 52 Q95 45 102 45 L293 45 Q300 45 300 52 L300 60" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-1.14s" /><g class="branch-label is-yes"><rect x="185.0" y="38.0" width="30" height="18" rx="4" /><text x="200.0" y="50.7">YES</text></g><path d="M95 210 L95 398" class="link link-dashed branch-no" marker-end="url(#arrow-no)" />
+                    <path d="M95 210 L95 398" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-1.33s" /><g class="branch-label is-no"><rect x="80.0" y="287.0" width="30" height="18" rx="4" /><text x="95.0" y="299.7">NO</text></g><g transform="translate(300, 100)">
+                        <polygon points="0,-40 50,0 0,40 -50,0" class="diamond-shape" />
+                        <text x="0" y="-7" class="diamond-text" text-anchor="middle" style="font-size:12px">ID</text>
+                    <text x="0" y="6" class="diamond-text" text-anchor="middle" style="font-size:12px">Matches?</text></g>
+                    
+                    <path d="M300 140 L300 185" class="link branch-yes" marker-end="url(#arrow-yes)" />
+                    <path d="M300 140 L300 185" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-1.52s" /><g class="branch-label is-yes"><rect x="285.0" y="151" width="30" height="18" rx="4" /><text x="300.0" y="163.7">YES</text></g><g transform="translate(300, 210)">
+                        <polygon points="50,0 100,25 50,50 0,25" class="diamond-shape" transform="translate(-50, -25)" />
                         <text x="0" y="1" class="diamond-text" text-anchor="middle">Link?</text>
                     </g>
-                    <!-- Y (Down) -->
-                    <path d="M300 235 L300 295" class="link" marker-end="url(#arrow)"/>
-                    <circle cx="300" cy="260" r="8" class="icon-success"/>
-                    <text x="300" y="264" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-
-                    <!-- Ownership? -->
-                    <g transform="translate(300, 320)">
-                        <polygon points="50,0 100,25 50,50 0,25" class="diamond-shape" transform="translate(-50, -25)"/>
-                        <text x="0" y="-4" class="diamond-text" text-anchor="middle">Ownership</text>
+                    
+                    <path d="M300 235 L300 276" class="link branch-yes" marker-end="url(#arrow-yes)" />
+                    <path d="M300 235 L300 276" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-1.71s" /><g class="branch-label is-yes"><rect x="285.0" y="251.0" width="30" height="18" rx="4" /><text x="300.0" y="263.7">YES</text></g><g transform="translate(300, 320)">
+                        <title>Ownership Verified?</title><polygon points="0,-44 50,0 0,44 -50,0" class="diamond-shape" />
+                        <text x="0" y="-7" class="diamond-text" text-anchor="middle">Owner</text>
                         <text x="0" y="7" class="diamond-text" text-anchor="middle">Verified?</text>
                     </g>
-                    <!-- Y (Down to Hybrid) -->
-                    <path d="M300 345 L300 382" class="link" marker-end="url(#arrow)"/>
-                    <circle cx="300" cy="357.5" r="8" class="icon-success"/>
-                    <text x="300" y="361.5" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-
-                    <!-- N Paths (Dashed to Standalone) -->
-                    <path d="M250 100 L200 100 L200 407 L160 407" class="link link-dashed" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow)"/> <!-- Match N -->
-                    <circle cx="225" cy="100" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="225" y="104" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
                     
-                    <path d="M250 210 L210 210 L210 407 L160 407" class="link link-dashed" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow)"/> <!-- Link N -->
-                    <circle cx="230" cy="210" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="230" y="214" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
+                    <path d="M300 364 L300 398" class="link branch-yes" marker-end="url(#arrow-yes)" />
+                    <path d="M300 364 L300 398" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-1.90s" /><g class="branch-label is-yes"><rect x="285.0" y="372" width="30" height="18" rx="4" /><text x="300.0" y="384.7">YES</text></g><path d="M250 100 L207 100 Q200 100 200 107 L200 416 Q200 423 193 423 L160 423" class="link link-dashed branch-no" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-no)" /> 
+                    <path d="M250 100 L207 100 Q200 100 200 107 L200 416 Q200 423 193 423 L160 423" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-2.09s" /><g class="branch-label is-no"><rect x="210.0" y="91.0" width="30" height="18" rx="4" /><text x="225.0" y="103.7">NO</text></g><path d="M250 210 L217 210 Q210 210 210 217 L210 416 Q210 423 203 423 L160 423" class="link link-dashed branch-no" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-no)" /> 
+                    <path d="M250 210 L217 210 Q210 210 210 217 L210 416 Q210 423 203 423 L160 423" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-2.28s" /><g class="branch-label is-no"><rect x="215.0" y="201.0" width="30" height="18" rx="4" /><text x="230.0" y="213.7">NO</text></g><path d="M250 320 L227 320 Q220 320 220 327 L220 416 Q220 423 213 423 L160 423" class="link link-dashed branch-no" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-no)" /> 
+                    <path d="M250 320 L227 320 Q220 320 220 327 L220 416 Q220 423 213 423 L160 423" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-2.47s" /><g class="branch-label is-no"><rect x="220.0" y="311.0" width="30" height="18" rx="4" /><text x="235.0" y="323.7">NO</text></g><g transform="translate(30, 398)" data-object="user" class="account-state">
+                        <rect width="130" height="50" class="node-rect" />
+                        <text x="65.0" y="39" class="node-text">Standalone Account</text>
+                    <use href="#object-user" class="semantic-icon tone-blue" x="54.0" y="3" width="22" height="22" aria-hidden="true" /></g>
                     
-                    <path d="M250 320 L220 320 L220 407 L160 407" class="link link-dashed" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow)"/> <!-- Owner N -->
-                    <circle cx="235" cy="320" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                    <text x="235" y="324" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
-
-                    <!-- Standalone Account (below Account Co-exist) -->
-                    <g transform="translate(30, 382)">
-                        <rect width="130" height="50" class="node-rect"/>
-                        <text x="65" y="28" class="node-text">Standalone Account</text>
-                    </g>
                     
-                    <!-- Hybrid Account (below Ownership Verified) -->
-                    <g transform="translate(235, 382)">
-                        <rect width="130" height="50" class="node-rect"/>
-                        <text x="65" y="28" class="node-text">Hybrid Account</text>
-                    </g>
+                    <g transform="translate(235, 398)" data-object="user-linked" class="account-state">
+                        <rect width="130" height="50" class="node-rect" />
+                        <text x="65.0" y="39" class="node-text">Hybrid Account</text>
+                    <use href="#object-user-linked" class="semantic-icon tone-green" x="54.0" y="3" width="22" height="22" aria-hidden="true" /></g>
                 </g>
 
-                <!-- Solid arrows to Account Management (from Standalone and Hybrid bottom-center) -->
-                <path d="M1615 652 L1615 720 L1100 720 L1100 800" class="link" marker-end="url(#arrow)"/>
-                <path d="M1820 652 L1820 760 L1340 760 L1340 800" class="link" marker-end="url(#arrow)"/>
+                
+                <path d="M1455 498 L1455 538 Q1455 545 1448 545 L1057 545 Q1050 545 1050 552 L1050 580" class="link" marker-end="url(#arrow)" />
+                <path d="M1660 498 L1660 553 Q1660 560 1653 560 L1177 560 Q1170 560 1170 567 L1170 580" class="link" marker-end="url(#arrow)" />
 
-                <!-- ==============================================
-                     4. Account Management (Bottom)
-                     ============================================== -->
-                <g transform="translate(650, 800)">
-                    <rect x="0" y="0" width="1180" height="420" class="group-rect" />
-                    <text x="25" y="35" class="group-label">Account Management</text>
+                
+                <g transform="translate(80, 580)" data-phase="management">
+                    <g class="phase-icon phase-management" transform="translate(24 16)"><rect width="28" height="28" rx="7" /><use href="#icon-settings" x="5" y="5" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></g><text x="66" y="35" class="group-label">Account Management</text>
 
-                    <!-- ID Update -->
+                    
                     <g transform="translate(30, 60)">
-                        <rect width="1120" height="150" fill="white" stroke="#94a3b8" rx="8"/>
-                        <text x="20" y="25" class="group-label" style="font-size:12px; fill:#64748b">ID Update Management</text>
+                        <rect width="1120" height="150" fill="white" stroke="#94a3b8" rx="8" class="management-lane" />
+                        <text x="20" y="25" class="group-label" style="font-size:13px;fill:var(--phase-ink);font-weight:500">ID Update Management</text>
 
-                        <!-- Step 5 -->
-                        <g class="step-group" onclick="showDetail('step5')" transform="translate(30, 60)">
-                            <rect width="120" height="40" class="step-rect"/>
-                            <text x="10" y="15" class="step-num">5</text>
-                            <text x="63" y="24" class="node-text">Verify Current ID</text>
-                        </g>
-                        <path d="M150 80 L200 80" class="link" marker-end="url(#arrow)"/>
-
-                        <!-- Matches Linked? -->
-                        <g transform="translate(260, 80)">
-                            <polygon points="60,0 120,30 60,60 0,30" class="diamond-shape" transform="translate(-60, -30)"/>
-                            <text x="0" y="-6" class="diamond-text" text-anchor="middle">Matches Linked</text>
-                            <text x="0" y="6" class="diamond-text" text-anchor="middle">IdP?</text>
-                        </g>
-                        <!-- Y -->
-                        <path d="M320 80 L370 80" class="link" marker-end="url(#arrow)"/>
-                        <circle cx="340" cy="80" r="8" class="icon-success"/>
-                        <text x="340" y="84" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
-
-                        <!-- Step 6 -->
-                        <g class="step-group" onclick="showDetail('step6')" transform="translate(370, 60)">
-                            <rect width="145" height="40" class="step-rect"/>
-                            <text x="10" y="15" class="step-num">6</text>
-                            <text x="75" y="24" class="node-text">Notify Inconsistency</text>
-                        </g>
-                        <path d="M515 80 L555 80" class="link" marker-end="url(#arrow)"/>
-
-                        <!-- N (Bypass) -->
-                        <path d="M260 108 L260 135 L625 135 L625 100" class="link link-dashed" marker-end="url(#arrow)"/>
-                        <circle cx="435" cy="135" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                        <text x="435" y="139" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
-
-                        <!-- Select New -->
-                        <g transform="translate(555, 60)">
-                            <rect width="150" height="40" class="node-rect"/>
-                            <text x="75" y="23" class="node-text">Select & Verify New ID</text>
-                        </g>
-                        <path d="M705 80 L745 80" class="link" marker-end="url(#arrow)"/>
-
-                        <!-- Collision? -->
-                        <g transform="translate(800, 80)">
-                            <polygon points="55,0 110,28 55,56 0,28" class="diamond-shape" transform="translate(-55, -28)"/>
-                            <text x="0" y="0" class="diamond-text" text-anchor="middle">ID Collision?</text>
-                        </g>
-                        <!-- Y (Collision detected - Loop back) -->
-                        <path d="M800 52 L800 30 L630 30 L630 60" class="link" marker-end="url(#arrow)"/>
-                        <circle cx="769.5" cy="30" r="8" class="icon-success"/>
-                        <text x="769.5" y="34" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="12">✓</text>
                         
-                        <!-- N (No collision) -->
-                        <path d="M855 80 L905 80" class="link link-dashed" marker-end="url(#arrow)"/>
-                        <circle cx="875" cy="80" r="8" fill="white" stroke="#ef4444" stroke-width="2"/>
-                        <text x="875" y="84" text-anchor="middle" fill="#ef4444" font-weight="bold" font-size="12">×</text>
+                        <g class="step-group" transform="translate(30, 60)" data-step="step5" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q5" aria-pressed="false" data-object="verify">
+                            <rect width="120" height="40" class="step-rect" />
+                            <text x="60.0" y="31" class="node-text">Verify Current ID</text>
+                        <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q5</text></g><use href="#object-verify" class="semantic-icon tone-green" x="52.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M150 80 L200 80" class="link" marker-end="url(#arrow)" />
 
-                        <!-- Step 7 -->
-                        <g class="step-group" onclick="showDetail('step7')" transform="translate(905, 60)">
-                            <rect width="155" height="40" class="step-rect"/>
-                            <text x="10" y="15" class="step-num">7</text>
-                            <text x="85" y="24" class="node-text">Terminate All Sessions</text>
+                        
+                        <g transform="translate(260, 80)">
+                            <title>Matches Linked IdP?</title><polygon points="0,-46 60,0 0,46 -60,0" class="diamond-shape" />
+                            <text x="0" y="-8" class="diamond-text" text-anchor="middle">Matches</text>
+                            <text x="0" y="8" class="diamond-text" text-anchor="middle">Linked IdP?</text>
                         </g>
-                        <g transform="translate(660, 22)">
-                            <rect width="100" height="16" fill="white"/>
-                            <text x="50" y="10" class="node-text" style="fill:#64748b; font-size:10px">Select Different</text>
+                        
+                        <path d="M320 80 L370 80" class="link branch-yes" marker-end="url(#arrow-yes)" />
+                        <path d="M320 80 L370 80" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-2.66s" /><g class="branch-label is-yes"><rect x="325.0" y="71.0" width="30" height="18" rx="4" /><text x="340.0" y="83.7">YES</text></g><g class="step-group" transform="translate(370, 60)" data-step="step6" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q6" aria-pressed="false" data-object="bell">
+                            <rect width="145" height="40" class="step-rect" />
+                            <text x="72.5" y="31" class="node-text">Notify Inconsistency</text>
+                        <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q6</text></g><use href="#object-bell" class="semantic-icon tone-gold" x="64.5" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M515 80 L555 80" class="link" marker-end="url(#arrow)" />
+
+                        
+                        <path d="M260 126 L260 128 Q260 135 267 135 L618 135 Q625 135 625 128 L625 100" class="link link-dashed branch-no" marker-end="url(#arrow-no)" />
+                        <path d="M260 126 L260 128 Q260 135 267 135 L618 135 Q625 135 625 128 L625 100" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-2.85s" /><g class="branch-label is-no"><rect x="420.0" y="126.0" width="30" height="18" rx="4" /><text x="435.0" y="138.7">NO</text></g><g transform="translate(555, 60)" data-object="edit-id">
+                            <rect width="150" height="40" class="node-rect" />
+                            <text x="75.0" y="31" class="node-text">Select &amp; Verify New ID</text>
+                        <use href="#object-edit-id" class="semantic-icon tone-blue" x="67.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M705 80 L745 80" class="link" marker-end="url(#arrow)" />
+
+                        
+                        <g transform="translate(800, 80)">
+                            <polygon points="0,-40 55,0 0,40 -55,0" class="diamond-shape" />
+                            <text x="0" y="-7" class="diamond-text" text-anchor="middle">ID</text>
+                        <text x="0" y="7" class="diamond-text" text-anchor="middle">Collision?</text></g>
+                        
+                        <path d="M800 40 L800 37 Q800 30 793 30 L637 30 Q630 30 630 37 L630 60" class="link branch-yes" marker-end="url(#arrow-yes)" />
+                        <path d="M800 40 L800 37 Q800 30 793 30 L637 30 Q630 30 630 37 L630 60" class="branch-flow branch-yes" aria-hidden="true" style="animation-delay:-3.04s" /><g class="branch-label is-yes"><rect x="754.5" y="21.0" width="30" height="18" rx="4" /><text x="769.5" y="33.7">YES</text></g><path d="M855 80 L905 80" class="link link-dashed branch-no" marker-end="url(#arrow-no)" />
+                        <path d="M855 80 L905 80" class="branch-flow branch-no" aria-hidden="true" style="animation-delay:-3.23s" /><g class="branch-label is-no"><rect x="860.0" y="71.0" width="30" height="18" rx="4" /><text x="875.0" y="83.7">NO</text></g><g class="step-group" transform="translate(905, 60)" data-step="step7" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q7" aria-pressed="false" data-object="logout">
+                            <rect width="155" height="40" class="step-rect" />
+                            <text x="77.5" y="31" class="node-text">Terminate All Sessions</text>
+                        <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q7</text></g><use href="#object-logout" class="semantic-icon tone-blue" x="69.5" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <g transform="translate(650, 6)">
+                            <text x="45" y="10" class="node-text" style="fill:#64748b; font-size:10px">Select Different</text>
                         </g>
                     </g>
 
-                    <!-- === IdP Association === -->
-                    <g transform="translate(30, 230)">
-                        <rect width="1120" height="170" fill="white" stroke="#94a3b8" rx="8"/>
-                        <text x="20" y="25" class="group-label" style="font-size:12px; fill:#64748b">IdP Association Management</text>
+                    
+                    <g transform="translate(30, 230)" id="association-lane">
+                        <rect width="1120" height="170" fill="white" stroke="#94a3b8" rx="8" class="management-lane" />
+                        <text x="20" y="25" class="group-label" style="font-size:13px;fill:var(--phase-ink);font-weight:500">IdP Association Management</text>
 
-                        <!-- Step 10 -->
-                        <g class="step-group" onclick="showDetail('step10')" transform="translate(30, 50)">
-                            <rect width="130" height="90" class="step-rect"/>
-                            <text x="10" y="15" class="step-num">10</text>
-                            <!-- UI Graphic -->
-                            <rect x="25" y="28" width="80" height="50" fill="white" stroke="#334155" rx="2"/>
-                            <rect x="25" y="28" width="80" height="12" fill="#cbd5e1"/>
-                            <text x="65" y="85" class="node-text" text-anchor="middle">Management UI</text>
-                        </g>
+                        
+                        <g class="step-group" transform="translate(30, 50)" data-step="step10" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q10" aria-pressed="false">
+                            <rect width="130" height="90" class="step-rect" />
+                            <text x="65" y="81" class="node-text" text-anchor="middle">Management UI</text>
+                        <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q10</text></g><g transform="translate(26 22)" fill="none" stroke="#78928e" stroke-width="1.2" class="account-preview"><rect width="78" height="48" rx="4" fill="white" /><path d="M0 11h78" /><circle cx="7" cy="5.5" r="1" /><circle cx="12" cy="5.5" r="1" /><circle cx="17" cy="5.5" r="1" /><circle cx="13" cy="23" r="4" fill="#e1eee7" class="preview-provider-a" /><circle cx="13" cy="37" r="4" fill="#e8eaf2" class="preview-provider-b" /><path d="M25 22h26m-26 4h16m-16 10h26m-26 4h16m12-17 3 3 5-6m-8 17h8" /></g></g>
 
-                        <!-- Fork -->
-                        <path d="M160 95 L190 95" class="link"/>
-                        <path d="M190 95 L190 60 L220 60" class="link" marker-end="url(#arrow)"/> <!-- Link -->
-                        <path d="M190 95 L190 130 L220 130" class="link" marker-end="url(#arrow)"/> <!-- Unlink -->
+                        
+                        <path d="M160 95 L190 95" class="link" />
+                        <path d="M190 95 L190 67 Q190 60 197 60 L220 60" class="link" marker-end="url(#arrow)" /> 
+                        <path d="M190 95 L190 123 Q190 130 197 130 L220 130" class="link" marker-end="url(#arrow)" /> 
 
-                        <!-- Link Flow -->
-                        <g transform="translate(220, 40)">
-                            <rect width="80" height="40" class="node-rect"/>
-                            <text x="40" y="23" class="node-text">Link IdP</text>
-                        </g>
-                        <path d="M300 60 L330 60" class="link" marker-end="url(#arrow)"/>
+                        
+                        <g transform="translate(220, 40)" data-object="link">
+                            <rect width="90" height="40" class="node-rect" />
+                            <text x="45.0" y="31" class="node-text">Link IdP</text>
+                        <use href="#object-link" class="semantic-icon tone-green" x="37.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M310 60 L350 60" class="link" marker-end="url(#arrow)" />
 
-                        <g class="step-group" onclick="showDetail('step8')" transform="translate(330, 40)">
-                            <rect width="80" height="40" class="step-rect"/>
-                            <text x="10" y="15" class="step-num">8</text>
-                            <text x="43" y="24" class="node-text">Verify ID</text>
-                        </g>
-                        <path d="M410 60 L440 60" class="link" marker-end="url(#arrow)"/>
+                        <g class="step-group" transform="translate(350, 40)" data-step="step8" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q8" aria-pressed="false" data-object="verify">
+                            <rect width="100" height="40" class="step-rect" />
+                            <text x="50.0" y="31" class="node-text">Verify ID</text>
+                        <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q8</text></g><use href="#object-verify" class="semantic-icon tone-green" x="42.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M450 60 L490 60" class="link" marker-end="url(#arrow)" />
 
-                        <g transform="translate(440, 40)">
-                            <rect width="100" height="40" class="node-rect"/>
-                            <text x="60" y="23" class="node-text">Select IdP</text>
-                        </g>
-                        <path d="M540 60 L570 60" class="link" marker-end="url(#arrow)"/>
+                        <g transform="translate(490, 40)" data-object="provider">
+                            <rect width="110" height="40" class="node-rect" />
+                            <text x="55.0" y="31" class="node-text">Select IdP</text>
+                        <use href="#object-provider" class="semantic-icon tone-blue" x="47.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M600 60 L640 60" class="link" marker-end="url(#arrow)" />
 
-                        <g transform="translate(570, 40)">
-                            <rect width="80" height="40" class="node-rect"/>
-                            <text x="40" y="23" class="node-text">Login</text>
-                        </g>
-                        <path d="M650 60 L680 60" class="link" marker-end="url(#arrow)"/>
+                        <g transform="translate(640, 40)" data-object="login">
+                            <rect width="90" height="40" class="node-rect" />
+                            <text x="45.0" y="31" class="node-text">Login</text>
+                        <use href="#object-login" class="semantic-icon tone-green" x="37.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M730 60 L770 60" class="link" marker-end="url(#arrow)" />
 
-                        <g transform="translate(680, 40)">
-                            <rect width="100" height="40" class="node-rect"/>
-                            <text x="50" y="23" class="node-text">Authorization</text>
-                        </g>
-                        <path d="M780 60 L830 60" class="link" marker-end="url(#arrow)"/>
-                        <text x="840" y="65" class="node-text" style="text-anchor:start">IdP Linked</text>
+                        <g transform="translate(770, 40)" data-object="authorization">
+                            <rect width="120" height="40" class="node-rect" />
+                            <text x="60.0" y="31" class="node-text">Authorization</text>
+                        <use href="#object-authorization" class="semantic-icon tone-green" x="52.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M890 60 L940 60" class="link" marker-end="url(#arrow)" />
+                        <g transform="translate(220, 110)" data-object="unlink">
+                            <rect width="90" height="40" class="node-rect" />
+                            <text x="45.0" y="31" class="node-text">Unlink IdP</text>
+                        <use href="#object-unlink" class="semantic-icon tone-gold" x="37.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M310 130 L420 130" class="link" marker-end="url(#arrow)" />
 
-                        <!-- Unlink Flow -->
-                        <g transform="translate(220, 110)">
-                            <rect width="80" height="40" class="node-rect"/>
-                            <text x="40" y="23" class="node-text">Unlink IdP</text>
-                        </g>
-                        <path d="M300 130 L330 130" class="link" marker-end="url(#arrow)"/>
+                        <g transform="translate(420, 110)" data-object="verify">
+                            <rect width="100" height="40" class="node-rect" />
+                            <text x="50.0" y="31" class="node-text">Verify ID</text>
+                        <use href="#object-verify" class="semantic-icon tone-green" x="42.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M520 130 L630 130" class="link" marker-end="url(#arrow)" />
 
-                        <g transform="translate(330, 110)">
-                            <rect width="80" height="40" class="node-rect"/>
-                            <text x="40" y="23" class="node-text">Verify ID</text>
-                        </g>
-                        <path d="M410 130 L440 130" class="link" marker-end="url(#arrow)"/>
-
-                        <g class="step-group" onclick="showDetail('step9')" transform="translate(440, 110)">
-                            <rect width="170" height="40" class="step-rect"/>
-                            <text x="10" y="15" class="step-num">9</text>
-                            <text x="95" y="24" class="node-text">Call IdP Revocation</text>
-                        </g>
-                        <path d="M610 130 L660 130" class="link" marker-end="url(#arrow)"/>
-                        <text x="670" y="135" class="node-text" style="text-anchor:start">IdP Unlinked</text>
-                    </g>
+                        <g class="step-group" transform="translate(630, 110)" data-step="step9" tabindex="0" role="button" aria-label="Inspect vulnerability primitive Q9" aria-pressed="false" data-object="revoke">
+                            <rect width="190" height="40" class="step-rect" />
+                            <text x="95.0" y="31" class="node-text">Call IdP Revocation</text>
+                        <g class="q-marker" transform="translate(-9 -12)"><rect width="30" height="20" rx="5" /><text x="15" y="14">Q9</text></g><use href="#object-revoke" class="semantic-icon tone-gold" x="87.0" y="1" width="16" height="16" aria-hidden="true" /></g>
+                        <path d="M820 130 L940 130" class="link" marker-end="url(#arrow)" />
+                        <g class="association-result" data-result="linked" data-object="link" transform="translate(940, 40)">
+      <title>Identity provider association established</title>
+      <rect width="150" height="40" class="node-rect" />
+      <text x="75" y="31" class="node-text">IdP Linked</text>
+      <use href="#object-link" x="67" y="1" width="16" height="16" class="semantic-icon" aria-hidden="true" />
+    </g><g class="association-result" data-result="unlinked" data-object="unlink" transform="translate(940, 110)">
+      <title>Identity provider association removed</title>
+      <rect width="150" height="40" class="node-rect" />
+      <text x="75" y="31" class="node-text">IdP Unlinked</text>
+      <use href="#object-unlink" x="67" y="1" width="16" height="16" class="semantic-icon" aria-hidden="true" />
+    </g></g>
                 </g>
 
-            </svg>
+            <g class="diagram-guide" transform="translate(1360 640)">
+ <g transform="translate(0 0)"><rect width="30" height="22" rx="4" class="step-rect" /><text class="legend-q" x="15" y="15">Q</text><text class="legend-label" x="46" y="16">Vulnerability Primitive</text></g>
+ <g transform="translate(0 43)"><g class="branch-label is-yes"><rect width="30" height="18" rx="4" /><text x="15" y="13">YES</text></g><text class="legend-label" x="46" y="14">Condition Met</text></g>
+ <g transform="translate(0 84)"><g class="branch-label is-no"><rect width="30" height="18" rx="4" /><text x="15" y="13">NO</text></g><text class="legend-label" x="46" y="14">Condition Not Met / Retry</text></g>
+ <text class="legend-note" x="0" y="145">IdP: Identity Provider · ID: Account Identifier</text>
+</g></svg></div></div>
+                </section>
+            <aside class="sidebar-pane" id="sidebar-pane" aria-label="Vulnerability details" hidden>
+                <div class="inspector-heading"><button type="button" class="icon-button" id="close-detail" aria-label="Close details"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+                <div id="detail-content" class="sidebar-content"><div id="d-tag" class="detail-tag"></div><h2 id="d-title"></h2><p id="d-desc"></p><div class="detail-rule"></div><div id="d-sections"><div class="section-title">Observed cases</div><div id="d-cases"></div><div class="section-title">CWE references</div><ul id="d-cwe" class="reference-list"></ul><div class="section-title">Standards &amp; practices</div><ul id="d-std" class="reference-list"></ul><div class="section-title">Related attack vectors</div><ul id="d-attacks" class="attack-list"></ul></div></div>
+            </aside>
         </div>
+        <footer class="model-footer"><div class="primitive-nav"><nav aria-label="Select a vulnerability primitive"><button type="button" class="primitive-button" data-select="step1" aria-label="Inspect vulnerability primitive Q1" aria-pressed="false">Q1</button><button type="button" class="primitive-button" data-select="step2" aria-label="Inspect vulnerability primitive Q2" aria-pressed="false">Q2</button><button type="button" class="primitive-button" data-select="step3" aria-label="Inspect vulnerability primitive Q3" aria-pressed="false">Q3</button><button type="button" class="primitive-button" data-select="step4" aria-label="Inspect vulnerability primitive Q4" aria-pressed="false">Q4</button><button type="button" class="primitive-button" data-select="step5" aria-label="Inspect vulnerability primitive Q5" aria-pressed="false">Q5</button><button type="button" class="primitive-button" data-select="step6" aria-label="Inspect vulnerability primitive Q6" aria-pressed="false">Q6</button><button type="button" class="primitive-button" data-select="step7" aria-label="Inspect vulnerability primitive Q7" aria-pressed="false">Q7</button><button type="button" class="primitive-button" data-select="step8" aria-label="Inspect vulnerability primitive Q8" aria-pressed="false">Q8</button><button type="button" class="primitive-button" data-select="step9" aria-label="Inspect vulnerability primitive Q9" aria-pressed="false">Q9</button><button type="button" class="primitive-button" data-select="step10" aria-label="Inspect vulnerability primitive Q10" aria-pressed="false">Q10</button></nav></div><div class="zoom-controls" aria-label="Diagram zoom"><button type="button" id="zoom-out" aria-label="Zoom out"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><input id="zoom-range" aria-label="Zoom level" type="range" min="0.7" max="3" step="0.05" value="1"><output id="zoom-value" for="zoom-range">100%</output><button type="button" id="zoom-in" aria-label="Zoom in"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button><span class="control-divider"></span><button type="button" id="fit-view" aria-label="Fit current phase to view"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button></div></footer>
+    </main>
+    <div class="sr-only" id="selection-status" role="status" aria-live="polite"></div>
+    <script>// Vulnerability descriptions and references are retained below; study sites are assigned from the supplied T1–T7 results.
 
-        <div id="empty-state" class="empty-overlay">
-                <div class="empty-card">
-                    <i class="fas fa-mouse-pointer"></i>
-                <p>Click on any <strong style="color:#f43f5e"> Vulnerability Primitives(Q1-Q10)</strong><br>to view details.</p>
-                </div>
-            </div>
-            
-        <!-- Right: Fixed-width sidebar (collapsed when empty) -->
-        <div class="sidebar-pane is-collapsed" id="sidebar-pane">
-            <div id="detail-content" class="sidebar-content">
-                <div id="d-tag" class="detail-tag">Phase</div>
-                <h2 id="d-title">Title</h2>
-                <p id="d-desc">Description</p>
-                <div id="d-sections" style="display:none;">
-                    <div class="section-title">CASES</div>
-                    <!-- Changed from ul to div to host the table -->
-                    <div id="d-cases"></div>
-
-                    <div class="section-title">CWE</div>
-                    <ul id="d-cwe"></ul>
-
-                    <div class="section-title">SECURITY STANDARDS & PRACTICES</div>
-                    <ul id="d-std"></ul>
-
-                    <div class="section-title">RELATED ATTACK VECTORS</div>
-                    <ul id="d-attacks"></ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Content Data
         const steps = {
                 "step1": {
                     tag: "Reg Phase (Q1–Q3)",
                     title: "Q1",
                     desc: "The system allows account creation or identifier occupation without verifying ownership of the identifier (e.g., email).",
-                    cases: [
-                        { site: "A visual discovery engine", issue: "Local registration lacks login identifier verification." },
-                        { site: "A news media platform", issue: "Local registration lacks login identifier verification." },
-                        { site: "A business and financial news website", issue: "Local registration lacks login identifier verification." },
-                        { site: "A website builder platform", issue: "Local registration lacks login identifier verification." },
-                        { site: "A URL shortening service", issue: "Local registration lacks login identifier verification." },
-                        { site: "A video sharing platform", issue: "Local registration lacks login identifier verification." },
-                        { site: "A news publication", issue: "Local registration lacks login identifier verification." },
-                        { site: "A language learning platform", issue: "Local registration lacks login identifier verification." },
-                        { site: "A technology news website", issue: "Local registration lacks login identifier verification. Registration and login share the same entry point, password recovery is available." },
-                        { site: "A digital library platform", issue: "Local registration lacks login identifier verification." }
-                    ],
+                    cases: [],
                     cwe: [
                         { text: "CWE-287: Improper Authentication", url: "https://cwe.mitre.org/data/definitions/287.html" }
                     ],
                     standards: [
                         { text: "OWASP Authentication Cheat Sheet", url: "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" }
                     ],
-                    attacks: ["T1", "T3", "T4", "T5"]
+                    attacks: ["T1"]
                 },
                 "step2": {
                     tag: "Reg Phase (Q1–Q3)",
                     title: "Q2",
                     desc: "Verification credentials (e.g., email links) are not bound to the browser session that initiated verification, allowing verification state to transfer across sessions (causing race conditions).",
-                    cases: [
-                        { site: "2Captcha", issue: "Login identifier verification process not bound to registration session." },
-                        { site: "A creative software company", issue: "Login identifier verification process not bound to registration session." },
-                        { site: "An audio streaming platform", issue: "Login identifier verification process not bound to registration session." },
-                        { site: "An audio streaming service", issue: "Login identifier verification process not bound to registration session." },
-                        { site: "An internet speed testing service", issue: "Attacker's regular account registration can succeed, but cannot log in with email password (prompting account not confirmed). Victim cannot register account or log in, but can log in with OAuth. After logging in, account is automatically confirmed, and attacker can then log in with email password." }
-                    ],
+                    cases: [],
                     cwe: [],
                     standards: [],
-                    attacks: ["T2", "T3", "T4", "T5"]
+                    attacks: ["T2"]
                 },
                 "step3": {
                     tag: "Reg Phase (Q1–Q3)",
                     title: "Q3",
                     desc: "The registration process locks the identifier before verification is complete, preventing the legitimate owner from registering (causing DoS).",
-                    cases: [
-                        { site: "2Captcha", issue: "Attacker registration blocks victim's normal registration." },
-                        { site: "A creative software company", issue: "Attacker registration blocks victim's normal registration." },
-                        { site: "An audio streaming platform", issue: "Attacker registration blocks victim's normal registration, OAuth login, and password recovery. Can directly register account and retrieve password." },
-                        { site: "An audio streaming service", issue: "Attacker registration blocks victim's normal registration." },
-                        { site: "A social news aggregation website", issue: "Attacker registration blocks victim's normal registration." },
-                        { site: "A game development engine", issue: "Attacker registration blocks victim's normal registration." },
-                        { site: "An e-commerce platform", issue: "Attacker registration blocks victim's normal registration, but password recovery is available. Can directly register account and retrieve password." },
-                        { site: "A video hosting platform", issue: "Attacker registration blocks victim's normal registration." },
-                        { site: "A URL shortening service", issue: "Attacker registration blocks victim's normal registration, but password recovery is available." },
-                        { site: "A financial data platform", issue: "Attacker registration blocks victim's normal registration, but password recovery is available." },
-                        { site: "A stock photo platform", issue: "Regular account registration requires confirmation. If regular account registration has been initiated but not confirmed, OAuth cannot register. OAuth registration and login have no reaction, still returns to initial state; regular registration will prompt that email has been used. Password recovery is possible." }
-                    ],
+                    cases: [],
                     cwe: [],
                     standards: [],
-                    attacks: ["T2", "T3", "T4", "T5", "T7"]
+                    attacks: ["T2", "T7"]
                 },
                 "step4": {
                     tag: "Linking (Q4)",
                     title: "Q4",
                     desc: "The RP automatically merges IdP-returned identities with local accounts based solely on email matching, without requiring users to prove account ownership (e.g., via password).",
-                    cases: [
-                        { site: "A visual discovery engine", issue: "Unverified implicit account linking." },
-                        { site: "A news media platform", issue: "Unverified implicit account linking." },
-                        { site: "A business and financial news website", issue: "Unverified implicit account linking." },
-                        { site: "A website builder platform", issue: "Unverified implicit account linking." },
-                        { site: "A URL shortening service", issue: "Unverified implicit account linking." },
-                        { site: "A video sharing platform", issue: "Unverified implicit account linking." },
-                        { site: "A news publication", issue: "Unverified implicit account linking." },
-                        { site: "A language learning platform", issue: "Unverified implicit account linking." },
-                        { site: "A technology news website", issue: "Unverified implicit account linking." },
-                        { site: "A digital library platform", issue: "Unverified implicit account linking." }
-                    ],
+                    cases: [],
                     cwe: [],
                     standards: [
                         { text: "Auth0: User Account Linking", url: "https://auth0.com/docs/manage-users/user-accounts/user-account-linking" },
@@ -927,25 +404,13 @@
                         { text: "Auth.js Providers", url: "https://authjs.dev/reference/core/providers" },
                         { text: "NIST SP 800-63C Section 3.8.1", url: "https://pages.nist.gov/800-63-3/sp800-63c.html#sec3_8_1" }
                     ],
-                    attacks: ["T1", "T3", "T4", "T5"]
+                    attacks: ["T1"]
                 },
                 "step5": {
                     tag: "Mgmt (Q5–Q7)",
                     title: "Q5",
                     desc: "When users change their login identifier (e.g., rebind email), the system only verifies the new email without verifying ownership of the old one.",
-                    cases: [
-                        { site: "A visual discovery engine", issue: "One-way verification when changing login identifier." },
-                        { site: "A creative software company", issue: "One-way verification when changing login identifier." },
-                        { site: "A news media platform", issue: "One-way verification when changing login identifier." },
-                        { site: "A business and financial news website", issue: "One-way verification when changing login identifier." },
-                        { site: "An audio streaming platform", issue: "Email change only requires password, no verification for old or new email." },
-                        { site: "An e-commerce platform", issue: "One-way verification when changing login identifier." },
-                        { site: "A URL shortening service", issue: "Email change only requires password." },
-                        { site: "A social media link management platform", issue: "One-way verification when changing login identifier." },
-                        { site: "A language learning platform", issue: "Email change only requires password, no verification for old or new email." },
-                        { site: "An internet speed testing service", issue: "Email change only requires password and new email confirmation." },
-                        { site: "A digital library platform", issue: "One-way verification when changing login identifier." }
-                    ],
+                    cases: [],
                     cwe: [
                         { text: "CWE-306: Missing Authentication for Critical Function", url: "https://cwe.mitre.org/data/definitions/306.html" }
                     ],
@@ -958,22 +423,7 @@
                     tag: "Mgmt (Q5–Q7)",
                     title: "Q6",
                     desc: "After users update their primary login identifier (e.g., change account email), the system fails to automatically clean up or re-verify OAuth bindings established with the old identifier, leaving old credentials valid.",
-                    cases: [
-                        { site: "A visual discovery engine", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A Chinese web portal", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A developer community site", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A creative software company", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A video conferencing platform", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A business and financial news website", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A website builder platform", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A video hosting platform", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "An academic library database", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A financial data platform", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "An electronics manufacturer", issue: "When binding a new email's OAuth account, requires password input and email verification." },
-                        { site: "An e-commerce marketplace", issue: "For OAuth registered accounts: after changing bound email, logging in with new email's OAuth creates a new account (unbound email), old email OAuth still logs back into original account (email is the new email)." },
-                        { site: "An event management platform", issue: "OAuth bindings not cleaned up after identifier change." },
-                        { site: "A digital library platform", issue: "Both old and new email OAuth accounts can log back into original account. After logging in with old email's OAuth, account becomes two accounts existing simultaneously, and account becomes unverified again. Old email can be deleted, but old email's OAuth can still log in, state consistent with above. Can bind several accounts in similar way." }
-                    ],
+                    cases: [],
                     cwe: [],
                     standards: [],
                     attacks: ["T6"]
@@ -982,18 +432,7 @@
                     tag: "Mgmt (Q5–Q7)",
                     title: "Q7",
                     desc: "After password reset or rebinding, the system only updates the database state without forcibly terminating other active web sessions (Cookie/Token).",
-                    cases: [
-                        { site: "A developer community site", issue: "Session not terminated after password change (requires mobile verification code)." },
-                        { site: "A creative software company", issue: "Session not terminated after email rebinding." },
-                        { site: "A news media platform", issue: "Session not terminated after password change." },
-                        { site: "A social media link management platform", issue: "Session not terminated after sensitive account operation." },
-                        { site: "An audio streaming platform", issue: "Session not terminated after sensitive account operation." },
-                        { site: "A news publication", issue: "Session not terminated after password change. Will not log out after changing/re-binding password." },
-                        { site: "A language learning platform", issue: "Session not terminated after changing bound email." },
-                        { site: "An internet speed testing service", issue: "Session not terminated after changing bound email." },
-                        { site: "A stock photo platform", issue: "Session not terminated after changing bound email." },
-                        { site: "A digital library platform", issue: "Session not terminated after sensitive account operation." }
-                    ],
+                    cases: [],
                     cwe: [
                         { text: "CWE-613: Insufficient Session Expiration", url: "https://cwe.mitre.org/data/definitions/613.html" }
                     ],
@@ -1005,15 +444,18 @@
                 "step8": {
                     tag: "Assoc (Q8–Q9)",
                     title: "Q8",
-                    desc: "When binding new OAuth accounts or unbinding while logged in, the system does not require users to re-authenticate.",
+                    desc: "The system does not require user reauthentication when binding a new IdP or unbinding an existing one.",
                     cases: [
-                        { site: "A visual discovery engine", issue: "IdP binding/unbinding lacks login identifier authentication." },
-                        { site: "A developer community site", issue: "IdP binding/unbinding lacks login identifier authentication (requires mobile verification code)." },
-                        { site: "A creative software company", issue: "IdP binding/unbinding lacks login identifier authentication." },
-                        { site: "An audio streaming platform", issue: "IdP binding/unbinding lacks login identifier authentication." },
-                        { site: "An audio streaming service", issue: "IdP binding/unbinding lacks login identifier authentication." },
-                        { site: "An e-commerce platform", issue: "IdP binding/unbinding lacks login identifier authentication." },
-                        { site: "A URL shortening service", issue: "IdP binding/unbinding lacks login identifier authentication." }
+                        { site: "A television news network and website", group: "Protective observations", status: "Reauthentication required for linking", evidence: "The linking page explicitly requires the current account password before connecting Google or Apple. This observation covers linking only." },
+                        { site: "A browser software platform", group: "Protective observations", status: "Positive signal · password prerequisite", evidence: "Disconnect is disabled until an account password is set. This does not establish whether an existing password must be re-entered when unlinking." },
+                        { site: "A travel review and booking platform", group: "Protective observations", status: "Weak positive signal · account-area gate", evidence: "Access to the account area requires reauthentication. A separate check at the binding or unbinding operation has not been established." },
+                        { site: "A visual discovery engine", group: "Earlier reported cases", status: "Earlier report · missing verification", evidence: "The earlier case list reports missing login-identifier authentication during IdP binding or unbinding; operation-specific evidence has not been rechecked here." },
+                        { site: "A developer community site", group: "Earlier reported cases", status: "Earlier report · requires clarification", evidence: "The earlier note reports missing login-identifier authentication but also records a required mobile verification code. Whether that code satisfies reauthentication needs clarification." },
+                        { site: "A creative software company", group: "Earlier reported cases", status: "Earlier report · missing verification", evidence: "The earlier case list reports missing login-identifier authentication during IdP binding or unbinding; operation-specific evidence has not been rechecked here." },
+                        { site: "An audio streaming platform", group: "Earlier reported cases", status: "Earlier report · missing verification", evidence: "The earlier case list reports missing login-identifier authentication during IdP binding or unbinding; operation-specific evidence has not been rechecked here." },
+                        { site: "An audio streaming service", group: "Earlier reported cases", status: "Earlier report · missing verification", evidence: "The earlier case list reports missing login-identifier authentication during IdP binding or unbinding; operation-specific evidence has not been rechecked here." },
+                        { site: "An e-commerce platform", group: "Earlier reported cases", status: "Earlier report · missing verification", evidence: "The earlier case list reports missing login-identifier authentication during IdP binding or unbinding; operation-specific evidence has not been rechecked here." },
+                        { site: "A URL shortening service", group: "Earlier reported cases", status: "Earlier report · missing verification", evidence: "The earlier case list reports missing login-identifier authentication during IdP binding or unbinding; operation-specific evidence has not been rechecked here." }
                     ],
                     cwe: [
                         { text: "CWE-306: Missing Authentication for Critical Function", url: "https://cwe.mitre.org/data/definitions/306.html" }
@@ -1039,32 +481,7 @@
                     tag: "UI (Q10)",
                     title: "Q10",
                     desc: "The system's frontend UI fails to display all linked third-party accounts completely and clearly, preventing users from detecting anomalous bindings.",
-                    cases: [
-                        { site: "A visual discovery engine", issue: "Only shows if Google login is supported." },
-                        { site: "A video streaming service", issue: "Shows linked IdP info, unable to bind or unbind." },
-                        { site: "An internet service company", issue: "No management interface." },
-                        { site: "A video sharing website", issue: "Only shows linked IdP info." },
-                        { site: "A video conferencing platform", issue: "Shows linked IdP info, unable to bind or unbind." },
-                        { site: "A web performance and security company", issue: "No management interface." },
-                        { site: "A URL shortening service", issue: "No management interface, only supports Google." },
-                        { site: "A web services provider", issue: "No management interface, only supports Google." },
-                        { site: "A video hosting platform", issue: "No management interface." },
-                        { site: "A non-profit software organization", issue: "No management interface." },
-                        { site: "A social news aggregation website", issue: "No management interface." },
-                        { site: "A game development engine", issue: "No management interface." },
-                        { site: "An application monitoring platform", issue: "No management interface." },
-                        { site: "An audio streaming platform", issue: "Management interface does not display specific account information, only shows which IdP is bound." },
-                        { site: "An e-commerce platform", issue: "Management interface does not display specific account information, only shows which IdP is bound." },
-                        { site: "A writing assistance platform", issue: "No management interface or opaque IdP display." },
-                        { site: "A financial data platform", issue: "No management interface or opaque IdP display." },
-                        { site: "A news publication", issue: "No management interface or opaque IdP display." },
-                        { site: "An e-commerce marketplace", issue: "No management interface or opaque IdP display." },
-                        { site: "A stock photo platform", issue: "No management interface or opaque IdP display." },
-                        { site: "A language learning platform", issue: "No management interface or opaque IdP display." },
-                        { site: "An internet speed testing service", issue: "No management interface or opaque IdP display." },
-                        { site: "A technology news website", issue: "No management interface or opaque IdP display." },
-                        { site: "A digital library platform", issue: "No management interface or opaque IdP display." }
-                    ],
+                    cases: [],
                     cwe: [],
                     standards: [
                         { text: "OWASP ASVS V4.0 (Session Management)", url: "https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md" }
@@ -1072,6 +489,139 @@
                     attacks: ["T6"]
                 }
             };
+
+
+
+
+
+
+
+            // BEGIN ANONYMOUS STUDY SITES
+            const studySiteDescriptions = {
+                S01: "A creative software and digital document platform",
+                S02: "An online wholesale marketplace",
+                S03: "A product analytics platform",
+                S04: "A nonprofit digital archive",
+                S05: "A design and engineering software platform",
+                S06: "A link management and URL shortening service",
+                S07: "An accommodation booking platform",
+                S08: "A community forum for web infrastructure software",
+                S09: "A video sharing platform",
+                S10: "A language learning platform",
+                S11: "An online marketplace for new and used goods",
+                S12: "A video game distribution platform",
+                S13: "A collaborative fan wiki platform",
+                S14: "A business and finance news publication",
+                S15: "An animated image sharing platform",
+                S16: "A customer relationship management platform",
+                S17: "An online news publication",
+                S18: "A profile link management platform",
+                S19: "An online publishing platform",
+                S20: "A nonprofit browser software organization",
+                S21: "A graphics hardware and computing company",
+                S22: "A subscription news publication",
+                S23: "A visual discovery and bookmarking platform",
+                S24: "A stock media library",
+                S25: "An international news agency",
+                S26: "A document sharing and reading platform",
+                S27: "A Chinese web portal and media platform",
+                S28: "An audio hosting and sharing platform",
+                S29: "An internet connection testing service",
+                S30: "A music streaming platform",
+                S31: "An online discount marketplace",
+                S32: "A remote access and support software platform",
+                S33: "An online newspaper",
+                S34: "A URL shortening service",
+                S35: "A financial charting and market analysis platform",
+                S36: "A video hosting and production platform",
+                S37: "A general news publication",
+                S38: "An academic publishing platform",
+                S39: "A technology and culture magazine",
+                S40: "A web portal and email service",
+                S41: "A video conferencing platform",
+                S42: "An appointment scheduling platform",
+                S43: "A television news network and website",
+                S44: "An event ticketing platform",
+                S45: "A personal computer and printer manufacturer",
+                S46: "A discussion community platform",
+                S47: "An application error monitoring platform",
+                S48: "An AI assistant platform",
+                S49: "A web security and content delivery platform",
+                S50: "A cloud file storage platform",
+                S51: "A professional networking platform",
+                S52: "A short-form video platform",
+                S53: "A travel review and booking platform",
+            };
+            const attackStudySites = {
+                T1: ["S03", "S09", "S10", "S14", "S22", "S23", "S25", "S34", "S37", "S39"],
+                T2: ["S08", "S18", "S19", "S29", "S31", "S33", "S40", "S41"],
+                T3: ["S01", "S04", "S05", "S06", "S10", "S11", "S13", "S15", "S18", "S23", "S32", "S33", "S40"],
+                T4: ["S01", "S04", "S05", "S06", "S10", "S13", "S15", "S16", "S18", "S20", "S23", "S26", "S28", "S31", "S33"],
+                T5: ["S06", "S07", "S09", "S11", "S14", "S15", "S17", "S18", "S21", "S25", "S26", "S29", "S33", "S36", "S39"],
+                T6: ["S01", "S02", "S07", "S15", "S17", "S20", "S21", "S22", "S23", "S24", "S26", "S27", "S31", "S35", "S36", "S41"],
+                T7: ["S03", "S09", "S11", "S12", "S24", "S30", "S32", "S35", "S36", "S38", "S39"],
+            };
+            const primitiveAttackIds = {
+                step1: ["T1"],
+                step2: ["T2"],
+                step3: ["T2", "T7"],
+                step4: ["T1"],
+                step5: ["T3"],
+                step6: ["T6"],
+                step7: ["T4"],
+            };
+            for (const [stepId, attackIds] of Object.entries(primitiveAttackIds)) {
+                const siteIds = [...new Set(attackIds.flatMap(id => attackStudySites[id]))];
+                steps[stepId].cases = siteIds.map(siteId => ({
+                    siteId,
+                    site: studySiteDescriptions[siteId]
+                }));
+                steps[stepId].attacks = attackIds;
+            }
+            steps.step10.cases = [
+                { siteId: "S04", site: studySiteDescriptions.S04, group: "Provider only · linked identity not shown" },
+                { siteId: "S05", site: studySiteDescriptions.S05, group: "Provider only · linked identity not shown" },
+                { siteId: "S42", site: studySiteDescriptions.S42, group: "Provider only · linked identity not shown" },
+                { siteId: "S43", site: studySiteDescriptions.S43, group: "Provider only · linked identity not shown" },
+                { siteId: "S10", site: studySiteDescriptions.S10, group: "Provider only · linked identity not shown" },
+                { siteId: "S44", site: studySiteDescriptions.S44, group: "Provider only · linked identity not shown" },
+                { siteId: "S13", site: studySiteDescriptions.S13, group: "Provider only · linked identity not shown" },
+                { siteId: "S45", site: studySiteDescriptions.S45, group: "Provider only · linked identity not shown" },
+                { siteId: "S20", site: studySiteDescriptions.S20, group: "Provider only · linked identity not shown" },
+                { siteId: "S22", site: studySiteDescriptions.S22, group: "Provider only · linked identity not shown" },
+                { siteId: "S23", site: studySiteDescriptions.S23, group: "Provider only · linked identity not shown" },
+                { siteId: "S24", site: studySiteDescriptions.S24, group: "Provider only · linked identity not shown" },
+                { siteId: "S46", site: studySiteDescriptions.S46, group: "Provider only · linked identity not shown" },
+                { siteId: "S47", site: studySiteDescriptions.S47, group: "Provider only · linked identity not shown" },
+                { siteId: "S30", site: studySiteDescriptions.S30, group: "Provider only · linked identity not shown" },
+                { siteId: "S31", site: studySiteDescriptions.S31, group: "Provider only · linked identity not shown" },
+                { siteId: "S34", site: studySiteDescriptions.S34, group: "Provider only · linked identity not shown" },
+                { siteId: "S35", site: studySiteDescriptions.S35, group: "Provider only · linked identity not shown" },
+                { siteId: "S37", site: studySiteDescriptions.S37, group: "Provider only · linked identity not shown" },
+                { siteId: "S41", site: studySiteDescriptions.S41, group: "Provider only · linked identity not shown" },
+                { siteId: "S06", site: studySiteDescriptions.S06, group: "No binding management view" },
+                { siteId: "S07", site: studySiteDescriptions.S07, group: "No binding management view" },
+                { siteId: "S48", site: studySiteDescriptions.S48, group: "No binding management view" },
+                { siteId: "S49", site: studySiteDescriptions.S49, group: "No binding management view" },
+                { siteId: "S09", site: studySiteDescriptions.S09, group: "No binding management view" },
+                { siteId: "S50", site: studySiteDescriptions.S50, group: "No binding management view" },
+                { siteId: "S11", site: studySiteDescriptions.S11, group: "No binding management view" },
+                { siteId: "S14", site: studySiteDescriptions.S14, group: "No binding management view" },
+                { siteId: "S15", site: studySiteDescriptions.S15, group: "No binding management view" },
+                { siteId: "S17", site: studySiteDescriptions.S17, group: "No binding management view" },
+                { siteId: "S51", site: studySiteDescriptions.S51, group: "No binding management view" },
+                { siteId: "S18", site: studySiteDescriptions.S18, group: "No binding management view" },
+                { siteId: "S21", site: studySiteDescriptions.S21, group: "No binding management view" },
+                { siteId: "S25", site: studySiteDescriptions.S25, group: "No binding management view" },
+                { siteId: "S26", site: studySiteDescriptions.S26, group: "No binding management view" },
+                { siteId: "S29", site: studySiteDescriptions.S29, group: "No binding management view" },
+                { siteId: "S33", site: studySiteDescriptions.S33, group: "No binding management view" },
+                { siteId: "S52", site: studySiteDescriptions.S52, group: "No binding management view" },
+                { siteId: "S53", site: studySiteDescriptions.S53, group: "No binding management view" },
+                { siteId: "S36", site: studySiteDescriptions.S36, group: "No binding management view" },
+                { siteId: "S39", site: studySiteDescriptions.S39, group: "No binding management view" },
+            ];
+            // END ANONYMOUS STUDY SITES
 
             const greek = ['α','β','γ','δ','ε','ζ','η','θ','ι','κ','λ','μ','ν','ξ','ο','π','ρ','σ','τ','υ','φ','χ','ψ','ω'];
             const redactWebsiteLike = (s) => {
@@ -1087,6 +637,7 @@
                 a.href = url;
                 a.textContent = text;
                 a.target = '_blank';
+                a.rel = 'noopener noreferrer';
                 a.style.color = '#3b82f6';
                 a.style.textDecoration = 'none';
                 a.onmouseover = () => a.style.textDecoration = 'underline';
@@ -1141,9 +692,10 @@
                 (attacks || []).forEach((attack) => {
                     const li = document.createElement('li');
                     const link = document.createElement('a');
-                    link.href = `video.html#${attack}`;
+                    link.href = `video.html${window.location.search}#${attack}`;
                     link.textContent = attack;
                     link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
                     link.style.color = '#3b82f6';
                     link.style.textDecoration = 'none';
                     link.onmouseover = () => link.style.textDecoration = 'underline';
@@ -1153,7 +705,7 @@
                 });
                 return attacks.length;
             };
-            const setCases = (el, cases) => {
+            const setCases = (el, cases, stepId) => {
                 if (!el) return 0;
                 el.innerHTML = '';
                 
@@ -1167,20 +719,54 @@
                     return 1;
                 }
 
-                // Remove duplicates based on site description
+                // Distinct sites can have the same anonymous description.
                 const seen = new Set();
                 const uniqueCases = cases.filter((c) => {
                     const site = redactCaseDesc(c?.site || '');
-                    if (seen.has(site)) {
+                    const key = c?.siteId || site;
+                    if (seen.has(key)) {
                         return false;
                     }
-                    seen.add(site);
+                    seen.add(key);
                     return true;
                 });
+
+                if (stepId === 'step10') {
+                    const note = document.createElement('p');
+                    note.className = 'case-evidence-note';
+                    note.textContent = 'T5 surveyed the binding interface. These 41 UI observations are not 41 separately verified Q10 exploit instances.';
+                    el.appendChild(note);
+                    for (const [group, summary] of [
+                        ['Provider only · linked identity not shown', '20 sites · Only the provider is visible'],
+                        ['No binding management view', '21 sites · No binding view was found']
+                    ]) {
+                        const subset = uniqueCases.filter(c => c.group === group);
+                        const details = document.createElement('details');
+                        details.className = 'case-observation-group';
+                        const heading = document.createElement('summary');
+                        heading.textContent = summary;
+                        details.appendChild(heading);
+                        const contents = document.createElement('div');
+                        setCases(contents, subset.map(({ siteId, site }) => ({ siteId, site })), 'step10-list');
+                        details.appendChild(contents);
+                        el.appendChild(details);
+                    }
+                    return uniqueCases.length;
+                }
 
                 // Create Table Wrapper
                 const wrapper = document.createElement('div');
                 wrapper.className = 'cases-wrapper';
+                if (stepId === 'step8' || stepId === 'step9' || /^step[1-7]$/.test(stepId)) {
+                    const note = document.createElement('p');
+                    note.className = 'case-evidence-note';
+                    note.textContent = stepId === 'step8'
+                        ? 'Three protective observations and seven earlier reports, outside the attack-instance counts. The T5 relationship follows the paper taxonomy; the T5 UI audit does not independently verify Q8.'
+                        : stepId === 'step9'
+                        ? 'Earlier qualitative examples. Token revocation was not systematically measured in the T1–T7 audit.'
+                        : 'Sites with a positive result for a related attack vector; this is not a separate per-Q measurement.';
+                    el.appendChild(note);
+                }
 
                 const table = document.createElement('table');
                 table.className = 'cases-table';
@@ -1197,15 +783,37 @@
 
                 // Body
                 const tbody = document.createElement('tbody');
+                let currentGroup = null;
                 uniqueCases.forEach((c, idx) => {
+                    if (c.group && c.group !== currentGroup) {
+                        currentGroup = c.group;
+                        const groupRow = document.createElement('tr');
+                        groupRow.className = 'case-group-row';
+                        const heading = document.createElement('th');
+                        heading.colSpan = 2;
+                        heading.scope = 'rowgroup';
+                        heading.textContent = currentGroup;
+                        groupRow.appendChild(heading);
+                        tbody.appendChild(groupRow);
+                    }
                     const tr = document.createElement('tr');
-                    const label = greek[idx] || String(idx + 1);
+                    const label = stepId.startsWith('step10') ? String(idx + 1) : (greek[idx] || String(idx + 1));
                     const site = redactCaseDesc(c?.site || '');
 
                     tr.innerHTML = `
                         <td class="col-id" style="text-align:center;">${label}</td>
                         <td class="col-site">${site}</td>
                     `;
+                    if (stepId === 'step8') {
+                        const cell = tr.querySelector('.col-site');
+                        const finding = document.createElement('strong');
+                        finding.className = 'case-finding';
+                        finding.textContent = c.status;
+                        const evidence = document.createElement('p');
+                        evidence.className = 'case-evidence';
+                        evidence.textContent = c.evidence;
+                        cell.append(finding, evidence);
+                    }
                     tbody.appendChild(tr);
                 });
                 table.appendChild(tbody);
@@ -1215,122 +823,8 @@
                 return uniqueCases.length;
         };
 
-        function showDetail(key) {
-            const data = steps[key];
-            if(!data) return;
 
-            const content = document.getElementById('detail-content');
-            const empty = document.getElementById('empty-state');
-            const sidebarPane = document.getElementById('sidebar-pane');
-
-            document.getElementById('d-tag').innerText = data.tag;
-            document.getElementById('d-title').innerText = data.title;
-            document.getElementById('d-desc').innerText = data.desc;
-
-            // Sections (CASES / CWE / STANDARDS / ATTACKS)
-            const sections = document.getElementById('d-sections');
-            
-            // Always show sections now, just populate "None" if empty
-            setCases(document.getElementById('d-cases'), data.cases);
-            setList(document.getElementById('d-cwe'), data.cwe);
-            setList(document.getElementById('d-std'), data.standards);
-            setAttackList(document.getElementById('d-attacks'), data.attacks || []);
-            
-            if (sections) sections.style.display = 'block';
-
-            empty.style.display = 'none';
-            content.style.display = 'block';
-            sidebarPane.classList.remove('is-collapsed');
-
-            content.classList.remove('slide-in');
-            void content.offsetWidth;
-            content.classList.add('slide-in');
-        }
-
-        // Ensure everyone (including refresh/back-forward cache) sees the empty state first.
-        function resetUI() {
-            const content = document.getElementById('detail-content');
-            const empty = document.getElementById('empty-state');
-            const sidebarPane = document.getElementById('sidebar-pane');
-            if (!content || !empty || !sidebarPane) return;
-
-            content.style.display = 'none';
-            empty.style.display = 'flex';
-            sidebarPane.classList.add('is-collapsed');
-        }
-
-        window.addEventListener('DOMContentLoaded', resetUI);
-        window.addEventListener('pageshow', (e) => {
-            // When restored from bfcache, DOM isn't reloaded; force reset.
-            if (e.persisted) resetUI();
-        });
-
-        // Zoom and drag flowchart
-        const svgWrapper = document.getElementById('svg-wrapper');
-        const zoomRange = document.getElementById('zoom-range');
-        const zoomValue = document.getElementById('zoom-value');
-        const zoomInBtn = document.getElementById('zoom-in');
-        const zoomOutBtn = document.getElementById('zoom-out');
-        const canvasPane = document.querySelector('.canvas-pane');
-
-        let zoomLevel = 1;
-        let panX = 0;
-        let panY = 0;
-        let isDragging = false;
-        let startX = 0;
-        let startY = 0;
-
-        const clampZoom = (v) => Math.min(2.0, Math.max(0.7, v));
-        const applyTransform = () => {
-            svgWrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
-            zoomRange.value = zoomLevel.toFixed(2);
-            zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
-        };
-
-        const applyZoom = (v) => {
-            zoomLevel = clampZoom(v);
-            applyTransform();
-        };
-
-        // Zoom Control
-        zoomRange.addEventListener('input', (e) => applyZoom(parseFloat(e.target.value)));
-        zoomInBtn.addEventListener('click', () => applyZoom(zoomLevel + 0.1));
-        zoomOutBtn.addEventListener('click', () => applyZoom(zoomLevel - 0.1));
-        canvasPane.addEventListener('wheel', (e) => {
-            if (!e.ctrlKey) return;
-            e.preventDefault();
-            applyZoom(zoomLevel + (e.deltaY < 0 ? 0.05 : -0.05));
-        }, { passive: false });
-
-        // Drag Control
-        canvasPane.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX - panX;
-            startY = e.clientY - panY;
-            canvasPane.style.cursor = 'grabbing';
-        });
-
-        canvasPane.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            panX = e.clientX - startX;
-            panY = e.clientY - startY;
-            applyTransform();
-        });
-
-        canvasPane.addEventListener('mouseup', () => {
-            isDragging = false;
-            canvasPane.style.cursor = 'grab';
-        });
-
-        canvasPane.addEventListener('mouseleave', () => {
-            isDragging = false;
-            canvasPane.style.cursor = 'grab';
-        });
-
-        // Set initial cursor style
-        canvasPane.style.cursor = 'grab';
-
-        applyTransform();
     </script>
+    <script src="./static/js/workflow-ui.js?v=21"></script>
 </body>
 </html>
