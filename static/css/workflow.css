@@ -764,6 +764,27 @@ h2 {
 
 }
 
+.col-qs {
+    width:112px;
+    white-space:nowrap;
+    color:#526c7d
+}
+
+.q-chip {
+    display:inline-block;
+    min-width:22px;
+    margin:1px 3px 1px 0;
+    padding:1px 5px;
+    border:1px solid #c9d9df;
+    border-radius:999px;
+    background:#f2f7f8;
+    color:#3e6977;
+    font-size:9px;
+    font-weight:700;
+    line-height:1.45;
+    text-align:center
+}
+
 .reference-list {
     list-style:none;
     margin:0;
