@@ -22,6 +22,33 @@
 
 <!-- Add CSS for image modal -->
   <style>
+    /* Case layout: keep content and videos within the same responsive width. */
+    .case-studies-page .section > .container {
+      width: 100%;
+      max-width: 1280px;
+    }
+
+    .case-studies-page .section > .container > .columns > .column {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .case-studies-page .content code {
+      overflow-wrap: anywhere;
+    }
+
+    .case-studies-page .publication-video {
+      height: auto;
+      padding-bottom: 0;
+    }
+
+    .case-studies-page .publication-video video {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: auto 16 / 9;
+    }
+
     .modal-image {
       display: none;
       position: fixed;
@@ -426,7 +453,7 @@
   <script src="./static/js/bulma-slider.min.js"></script>
   <script src="./static/js/index.js"></script>
 </head>
-<body>
+<body class="case-studies-page">
 
 
 
@@ -517,7 +544,7 @@
                   </div>
 
                   <div class="publication-video" style="margin-top: 20px;">
-                    <video controls width="100%" style="max-width: 800px;">
+                    <video controls width="100%">
                       <source src="./static/videos/Pinterest - 1.mp4" type="video/mp4">
                       Your browser does not support the video tag.
                     </video>
@@ -590,7 +617,7 @@
                   </div>
 
                   <div class="publication-video" style="margin-top: 20px;">
-                    <video controls width="100%" style="max-width: 800px;">
+                    <video controls width="100%">
                       <source src="./static/videos/Pinterest - 2.mp4" type="video/mp4">
                       Your browser does not support the video tag.
                     </video>
@@ -762,7 +789,7 @@
                     </ol>
                   </div>
                   <div class="publication-video" style="margin-top: 20px;">
-                    <video controls width="100%" style="max-width: 800px;">
+                    <video controls width="100%">
                       <source src="./static/videos/New York Times.mp4" type="video/mp4">
                       Your browser does not support the video tag.
                     </video>
@@ -1036,7 +1063,7 @@
                   </div>
 
                   <div class="publication-video" style="margin: 20px 0;">
-                    <video controls width="100%" style="max-width: 800px;">
+                    <video controls width="100%">
                       <source src="./static/videos/2Captcha.mp4" type="video/mp4">
                       Your browser does not support the video tag.
                     </video>
